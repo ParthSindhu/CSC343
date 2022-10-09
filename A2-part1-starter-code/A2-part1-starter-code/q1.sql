@@ -14,10 +14,18 @@ CREATE TABLE q1(
 -- (But give them better names!) The IF EXISTS avoids generating an error 
 -- the first time this file is imported.
 DROP VIEW IF EXISTS intermediate_step CASCADE;
+DROP VIEW IF EXISTS ReqToDrop CASCADE;
 
 
 -- Define views for your intermediate steps here:
-
+-- Define views for your intermediate steps here:
+CREATE VIEW ReqToDrop AS 
+SELECT DISTINCT client_id, count(DISTINCT date_trunc('month', Request.datetime) ) AS monthCount
+FROM Request, Dispatch, Pickup, Dropoff
+WHERE Request.request_id = Dispatch.request_id AND Pickup.request_id = Dropoff.request_id AND Dispatch.request_id = Pickup.request_id
+GROUP BY client_id;
 
 -- Your query that answers the question goes below the "insert into" line:
 INSERT INTO q1
+SELECT client_id, email, monthCount
+FROM ReqToDrop NATURAL RIGHT JOIN Client;
