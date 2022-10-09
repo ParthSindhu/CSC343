@@ -27,5 +27,5 @@ GROUP BY client_id;
 
 -- Your query that answers the question goes below the "insert into" line:
 INSERT INTO q1
-SELECT client_id, email, monthCount
+SELECT client_id, email, COALESCE(monthCount, 0 )
 FROM ReqToDrop NATURAL RIGHT JOIN Client;
