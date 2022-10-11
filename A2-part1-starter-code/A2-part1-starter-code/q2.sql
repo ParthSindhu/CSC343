@@ -59,7 +59,7 @@ WHERE year = 2021
 GROUP BY client_id;
 CREATE VIEW LessRidesIn2021 AS
 SELECT client_id,
-	(ridesNum2020 - ridesNum2021) AS decline
+	(ridesNum2021 - ridesNum2020) AS decline
 FROM RidesIn2020
 	NATURAL JOIN RidesIn2021
 WHERE ridesNum2020 - ridesNum2021 > 0;
