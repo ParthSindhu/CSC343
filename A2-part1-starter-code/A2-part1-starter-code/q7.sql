@@ -23,49 +23,44 @@ DROP VIEW IF EXISTS fourstars CASCADE;
 DROP VIEW IF EXISTS threestars CASCADE;
 DROP VIEW IF EXISTS twostars CASCADE;
 DROP VIEW IF EXISTS onestars CASCADE;
-DROP VIEW IF EXISTS allstars CASCADE;
 
 -- Define views for your intermediate steps here:
 CREATE VIEW driverRated AS
 SELECT driver_id, rating
-FROM ClockedIn NATURAL JOIN Dispatch NATURAL JOIN DriverRating;
+FROM ClockedIn, Dispatch, DriverRating
+WHERE ClockedIn.shift_id = Dispatch.shift_id AND Dispatch.request_id = DriverRating.request_id;
 
 CREATE VIEW fivestars AS
-SELECT driver_id, sum(rating) as r5
+SELECT driver_id, count(rating) as r5
 FROM driverRated
 WHERE rating = 5
 GROUP BY driver_id;
 
 CREATE VIEW fourstars AS
-SELECT driver_id, sum(rating) as r4
+SELECT driver_id, count(rating) as r4
 FROM driverRated
 WHERE rating = 4
 GROUP BY driver_id;
 
 CREATE VIEW threestars AS
-SELECT driver_id, sum(rating) as r3
+SELECT driver_id, count(rating) as r3
 FROM driverRated
 WHERE rating = 3
 GROUP BY driver_id;
 
 CREATE VIEW twostars AS
-SELECT driver_id, sum(rating) as r2
+SELECT driver_id, count(rating) as r2
 FROM driverRated
 WHERE rating = 2
 GROUP BY driver_id;
 
 CREATE VIEW onestars AS
-SELECT driver_id, sum(rating)as r1
+SELECT driver_id, count(rating)as r1
 FROM driverRated
 WHERE rating = 1
 GROUP BY driver_id;
 
-CREATE VIEW allstars AS
-SELECT driver_id, r5, r4, r3, r2, r1
-FROM fivestars, fourstars, threestars, twostars, onestars
-GROUP BY driver_id;
-
 -- Your query that answers the question goes below the "insert into" line:
 INSERT INTO q7
-SELECT Driver.driver_id COALESCE(r5, 0), COALESCE(r4, 0), COALESCE(r3, 0), COALESCE(r2, 0), COALESCE(r1, 0)
-FROM allstars RIGHT NATURAL JOIN Driver; 
+SELECT Driver.driver_id, COALESCE(r5, 0), COALESCE(r4, 0), COALESCE(r3, 0), COALESCE(r2, 0), COALESCE(r1, 0)
+FROM fivestars NATURAL FULL JOIN fourstars NATURAL FULL JOIN threestars NATURAL FULL JOIN twostars NATURAL FULL JOIN onestars NATURAL FULL JOIN Driver; 
