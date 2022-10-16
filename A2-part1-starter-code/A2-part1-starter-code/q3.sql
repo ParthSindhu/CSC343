@@ -14,8 +14,14 @@ CREATE TABLE q3(
 -- the first time this file is imported.
 DROP VIEW IF EXISTS DriverRequests CASCADE;
 DROP VIEW IF EXISTS DriverPickups CASCADE;
+DROP VIEW IF EXISTS DriverDropoffs CASCADE;
 DROP VIEW IF EXISTS DriverDuration CASCADE;
-DROP VIEW IF EXISTS DriverShiftDuration CASCADE;
+DROP VIEW IF EXISTS DriverDayDuration CASCADE;
+DROP VIEW IF EXISTS DriverBreaks CASCADE;
+DROP VIEW IF EXISTS DriverBreaksDay CASCADE;
+DROP VIEW IF EXISTS DriverBreaksFull CASCADE;
+DROP VIEW IF EXISTS BadDays CASCADE;
+DROP VIEW IF EXISTS BadDaysConsec CASCADE;
 -- Define views for your intermediate steps here:
 CREATE VIEW DriverRequests AS
 SELECT driver_id,
@@ -91,10 +97,10 @@ SELECT DriverBreaksFull.driver_id,
     DriverBreaksFull.rday,
     btimemax,
     driving,
-    btimetotal
+    COALESCE(btimetotal, '0') as btimetotal
 FROM DriverBreaksFull natural
-    left join DriverDayDuration
-    natural join DriverBreaksDay
+    left join DriverDayDuration natural
+    left join DriverBreaksDay
 WHERE btimemax <= INTERVAL '15 minutes'
     AND driving >= INTERVAL '12 hour';
 CREATE VIEW BadDaysConsec AS
