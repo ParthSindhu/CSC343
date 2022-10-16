@@ -15,6 +15,8 @@ CREATE TABLE q6(
 -- the first time this file is imported.
 DROP VIEW IF EXISTS intermediate_step CASCADE;
 DROP VIEW IF EXISTS fullRide CASCADE;
+DROP VIEW IF EXISTS fullRideYear CASCADE;
+DROP VIEW IF EXISTS masterTable CASCADE;
 DROP VIEW IF EXISTS maxone CASCADE;
 DROP VIEW IF EXISTS topone CASCADE;
 DROP VIEW IF EXISTS maxtwo CASCADE;
@@ -36,63 +38,71 @@ FROM Request, Dispatch, Pickup, Dropoff
 WHERE Request.request_id = Dispatch.request_id AND Dispatch.request_id = Pickup.request_id AND Pickup.request_id = Dropoff.request_id
 GROUP BY client_id, Year;
 
+CREATE VIEW fullRideYear AS
+SELECT DISTINCT Year
+FROM fullRide;
+
+CREATE VIEW masterTable AS
+SELECT client_id, Year, COALESCE(rides, 0) as rides
+FROM fullRideYear NATURAL FULL JOIN Client NATURAL FULL JOIN fullRide;
+
 CREATE VIEW maxone AS
 SELECT max(rides) as maxonenum 
-FROM fullRide;
+FROM masterTable;
 
 CREATE VIEW topone AS
 SELECT client_id, Year, rides
-FROM fullRide, maxone
+FROM masterTable, maxone
 WHERE rides = maxonenum;
 
 CREATE VIEW maxtwo AS
 SELECT DISTINCT rides AS maxtwonum
-FROM fullRide f1
-WHERE 1=(SELECT count(DISTINCT rides) FROM fullRide f2 WHERE f2.rides>f1.rides);
+FROM masterTable f1
+WHERE 1=(SELECT count(DISTINCT rides) FROM masterTable f2 WHERE f2.rides>f1.rides);
 
 CREATE VIEW toptwo AS
 SELECT client_id, Year, rides
-FROM fullRide, maxtwo
+FROM masterTable, maxtwo
 WHERE rides = maxtwonum;
 
 CREATE VIEW maxthree AS
 SELECT DISTINCT rides AS maxthreenum
-FROM fullRide f1
-WHERE 2=(SELECT count(DISTINCT rides) FROM fullRide f2 WHERE f2.rides>f1.rides);
+FROM masterTable f1
+WHERE 2=(SELECT count(DISTINCT rides) FROM masterTable f2 WHERE f2.rides>f1.rides);
 
 CREATE VIEW topthree AS
 SELECT client_id, Year, rides
-FROM fullRide, maxthree
+FROM masterTable, maxthree
 WHERE rides = maxthreenum;
 	
 
 CREATE VIEW minone AS
 SELECT min(rides) as minonenum
-FROM fullRide;
+FROM masterTable;
 
 CREATE VIEW lowone AS
 SELECT client_id, Year, rides
-FROM fullRide, minone
+FROM masterTable, minone
 WHERE rides = minonenum;
 
 CREATE VIEW mintwo AS
 SELECT DISTINCT rides AS mintwonum
-FROM fullRide f1
-WHERE 1=(SELECT count(DISTINCT rides) FROM fullRide f2 WHERE f2.rides<f1.rides);
+FROM masterTable f1
+WHERE 1=(SELECT count(DISTINCT rides) FROM masterTable f2 WHERE f2.rides<f1.rides);
 
 CREATE VIEW lowtwo AS
 SELECT client_id, Year, rides
-FROM fullRide, mintwo
+FROM masterTable, mintwo
 WHERE rides = mintwonum;
 
 CREATE VIEW minthree AS
 SELECT DISTINCT rides AS minthreenum
-FROM fullRide f1
-WHERE 2=(SELECT count(DISTINCT rides) FROM fullRide f2 WHERE f2.rides<f1.rides);
+FROM masterTable f1
+WHERE 2=(SELECT count(DISTINCT rides) FROM masterTable f2 WHERE f2.rides<f1.rides);
 
 CREATE VIEW lowthree AS
 SELECT client_id, Year, rides
-FROM fullRide, minthree
+FROM masterTable, minthree
 WHERE rides = minthreenum;
 
 CREATE VIEW master AS 
@@ -118,4 +128,4 @@ FROM lowone;
 INSERT INTO q6
 SELECT client_id, Year, rides
 FROM master
-ORDER BY rides desc;
+ORDER BY client_id;
