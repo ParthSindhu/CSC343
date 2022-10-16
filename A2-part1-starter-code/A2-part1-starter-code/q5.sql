@@ -24,7 +24,7 @@ DROP VIEW IF EXISTS rideBilledComp CASCADE;
 
 -- Define views for your intermediate steps here:
 CREATE VIEW fullRide AS
-SELECT Request.request_id, Request.client_id, CONCAT(EXTRACT(Year From  Request.datetime), ' ', EXTRACT(Month FROM  Request.datetime)) as month
+SELECT Request.request_id, Request.client_id, CONCAT(EXTRACT(Year From  Request.datetime), ' ', to_char(Request.datetime, 'MM')) as month
 FROM Request, Dispatch, Pickup, Dropoff
 WHERE Request.request_id = Dispatch.request_id AND Dispatch.request_id = Pickup.request_id AND Pickup.request_id = Dropoff.request_id;
 
