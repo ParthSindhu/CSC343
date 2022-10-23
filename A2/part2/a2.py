@@ -205,6 +205,66 @@ class Assignment2:
         """
         try:
             # TODO: implement this method
+            cursor = self.connection.cursor()
+            # check a: driver on ongoing shift
+            cursor.execute("""
+                    CREATE TEMPORARY VIEW shiftOver AS
+                    SELECT shift_id
+                    FROM ClockedIn, ClockedOut
+                    WHERE ClockedIn.shift_id = ClockedOut.shift_id;
+
+                    CREATE TEMPORARY VIEW shiftOngoing AS
+                    (SELECT shift_id FROM ClockedIn) - (SELECT shift_id FROM shiftOver);
+                    SELECT shift_id, driver_id
+                    FROM shiftOngoing NATURAL JOIN ClockedIN
+                    WHERE driver_id = %s;
+                    """, (driver_id,))
+            ongoing = cursor.fetchone()
+            if ongoing is None:
+                return False
+            
+            shift_id = ongoing[0]
+
+            #check b: driver dispatched to pick up the client
+            cursor.execute("""
+                    CREATE TEMPORARY VIEW alreadyDispatched AS
+                    SELECT request_id, client_id
+                    FROM Request, Dispatch
+                    WHERE Request.request_id = Dispatch.request_id
+                    AND client_id = %s AND shift_id = %s;
+
+                    CREATE TEMPORARY VIEW notDispatched AS
+                    SELECT request_id, client_id
+                    FROM Request 
+                    WHERE client_id = %s AND
+                    request_id NOT IN (SELECT request_id FROM alreadyDispatched); 
+                    SELECT request_id, client_id FROM alreadyDispatched UNION
+                    SELECT request_id, client_id FROM notDispatched;
+                    """, (client_id, shift_id, client_id,))
+            
+            dispatching = cursor.fetchone()
+            if dispatching is None:
+                return false
+            #DO WE NEED TO CALL DISPATCH? PRECONDITIONS?
+
+            request_id = dispatching[0]
+
+            #check c: pick-up not recorded
+            cursor.execute("""
+                    SELECT *
+                    FROM Pickup
+                    WHERE request_id = %s;
+                    """, (request_id))
+            
+            notpicked = cursor.fetchone()
+            if notpicked is not None:
+                return False
+            
+            #insert
+            cursor.execute("""
+                    INSERT INTO Pickup(request_id, datetime) VALUES (%s, %s);
+                    """, (request_id, datetime))
+                    
             pass
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
