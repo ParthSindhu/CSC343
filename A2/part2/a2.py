@@ -142,11 +142,16 @@ class Assignment2:
         """
         try:
             # TODO: implement this method
+            cursor = self.connection.cursor()
+            cursor.execute("""
+            INSERT INTO ClockedIn(shift_id, driver_id, datetime) VALUES
+	        (%s, %s, %s)
+            """, 1, driver_id, datetime.now())
             pass
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
-            # raise ex
+            raise ex
             return False
 
     def pick_up(self, driver_id: int, client_id: int, when: datetime) -> bool:
@@ -293,8 +298,10 @@ def sample_test_function() -> None:
     """A sample test function."""
     a2 = Assignment2()
     try:
+        import os
+        user = os.getlogin()
         # TODO: Change this to connect to your own database:
-        connected = a2.connect("csc343h-dianeh", "dianeh", "")
+        connected = a2.connect(f"csc343h-{user}", user, "")
         print(f"[Connected] Expected True | Got {connected}.")
 
         # TODO: Test one or more methods here, or better yet, make more testing
