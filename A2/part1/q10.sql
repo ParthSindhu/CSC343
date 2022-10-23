@@ -63,7 +63,9 @@ WHERE year = '21'
 GROUP BY driver_id,
     month;
 CREATE VIEW Months AS
-SELECT CAST(to_char(generate_series(1, 12), '09') AS CHAR(2)) AS month;
+SELECT CAST(
+        TRIM(to_char(generate_series(1, 12), '09')) AS CHAR(2)
+    ) AS month;
 CREATE View AllDrivers AS
 SELECT driver_id,
     month
