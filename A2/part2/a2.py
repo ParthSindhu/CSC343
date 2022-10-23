@@ -143,10 +143,22 @@ class Assignment2:
         try:
             # TODO: implement this method
             cursor = self.connection.cursor()
+            # get max shift id
+            cursor.execute("""
+            SELECT MAX(shift_id) from ClockedIn
+            """)
+            shift_id = cursor.fetchone()[0]
+            if shift_id is None:
+                shift_id = 0
+            else:
+                shift_id = shift_id + 1
+            # check if clcked in
+            
+            # Insert into clocked in
             cursor.execute("""
             INSERT INTO ClockedIn(shift_id, driver_id, datetime) VALUES
 	        (%s, %s, %s)
-            """, 1, driver_id, datetime.now())
+            """, shift_id, driver_id, datetime.now())
             pass
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
