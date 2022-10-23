@@ -121,8 +121,12 @@ FROM UntrainedLate NATURAL
     FULL JOIN UntrainedEarly;
 -- Your query that answers the question goes below the "insert into" line:
 INSERT INTO q4
-SELECT *
+SELECT type,
+    number early,
+    late
 FROM Trained
-Union
-SELECT *
+Union all
+SELECT type,
+    number early,
+    late
 FROM Untrained;
