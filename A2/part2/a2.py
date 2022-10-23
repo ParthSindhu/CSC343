@@ -11,6 +11,7 @@ expressly prohibited.
 """
 from operator import ge
 from tkinter.messagebox import NO
+from zoneinfo import available_timezones
 import psycopg2 as pg
 import psycopg2.extensions as pg_ext
 from typing import Optional, List, Any
@@ -123,6 +124,32 @@ class Assignment2:
         except pg.Error:
             return False
 
+    def check_clocked_in(self, driver_id: int | None = None) -> bool | list[str]:
+        """
+        A) Return True if the driver with driver id <driver_id> is currently
+        on an ongoing shift, and False otherwise.
+        B) If <driver_id> is None, return list of all drivers who are currently on an ongoing shift.
+        """
+        cursor = self.connection.cursor()
+        template = """
+        SELECT  ci.shift_id, 
+                ci.datetime as in,
+                ci.driver_id, 
+                co.datetime as out
+        FROM ClockedIn ci, ClockedOut co
+        WHERE   ci.shift_id = co.shift_id
+        """
+        if driver_id is not None:
+            template += " AND ci.driver_id = %s"
+            cursor.execute(template, (driver_id,))
+            all_shift = cursor.fetchall()
+            return any([shift[3] is None for shift in all_shift])
+        else:
+            cursor.execute(template)
+            all_shift = cursor.fetchall()
+            # Find all drivers who are currently on shift
+            return [shift[2] for shift in all_shift if shift[3] is None]
+
     # ======================= Driver-related methods ======================= #
 
     def clock_in(self, driver_id: int, when: datetime, geo_loc: GeoLoc) -> bool:
@@ -155,16 +182,7 @@ class Assignment2:
             else:
                 shift_id = shift_id + 1
             # check if clocked in
-            cursor.execute("""
-            SELECT  ci.shift_id, 
-                    ci.datetime as in, 
-                    co.datetime as out
-            FROM ClockedIn ci, ClockedOut co
-            WHERE   ci.shift_id = co.shift_id AND
-                    ci.driver_id = %s
-            """, (driver_id,))
-            all_shift = cursor.fetchall()
-            if any([shift[2] is None for shift in all_shift]):
+            if self.check_clocked_in(driver_id):
                 return False
 
             # Insert into clocked in
@@ -262,8 +280,111 @@ class Assignment2:
             - <when> is after all dates currently recorded in the database.
         """
         try:
-            # TODO: Implement this method
-            pass
+            # Find all clients who have requested rides in this area
+            cursor = self.connection.cursor()
+            cursor.execute("""
+            CREATE TEMPORARY VIEW temp AS
+            SELECT  client_id, source, destination
+            FROM Client Natural Join Request
+            WHERE   source @> '(%s, %s)' AND
+                    source <@ '(%s, %s)' AND
+                    Request.request_id NOT IN (SELECT request_id FROM Dispatch)
+            """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
+            cursor.execute("""
+            SELECT  client_id, sum(amount) as total_billings
+            FROM Client Natural Join Request Natural Join Billed
+            WHERE client_id IN (SELECT client_id FROM temp)
+            GROUP BY client_id
+            ORDER BY total_billings DESC)
+            """,)
+            clients = cursor.fetchall()
+
+            # Find all drivers who are currently on an ongoing shift
+            clockedin_drivers = self.check_clocked_in()
+            # Find all drivers who are available and are NOT currently
+            # dispatched or on an ongoing ride
+            cursor.execute("""
+            CREATE TEMPORARY VIEW temp2 AS
+            SELECT  driver_id, 
+                    Request.datetime as rt, 
+                    Dispatch.datetime as dt, 
+                    Pickup.datetime as pt, 
+                    Dropoff.datetime as dot
+            FROM ClockedIn, Request, Dispatch, Pickup, Dropoff
+            WHERE   ClockedIn.shift_id = Dispatch.shift_id AND
+                    Dispatch.request_id = Request.request_id AND
+                    Request.request_id = Pickup.request_id AND
+                    Pickup.request_id = Dropoff.request_id AND
+            """)
+            cursor.execute("""
+            CREATE TEMPORARY VIEW free_drivers AS
+            SELECT  driver_id
+            FROM temp2
+            WHERE   rt  IS NOT NULL AND
+                    dt  IS NOT NULL AND
+                    pt  IS NOT NULL AND
+                    dot IS NOT NULL
+            """)
+
+            # Find all drivers whose most recent recorded location is in the
+            # area bounded by <nw> and <se>
+            cursor.execute("""
+            CREATE TEMPORARY VIEW driver_recent_locations AS
+            SELECT  driver_id, MAX(datetime) dt
+            FROM Location
+            """)
+            cursor.execute("""
+            CREATE TEMPORARY VIEW driver_nearby_locations AS
+            SELECT  driver_id, location
+            FROM Location
+            WHERE   datetime = (
+                SELECT dt FROM driver_recent_locations
+                WHERE driver_id = Location.driver_id
+                ) AND
+                    location @> '(%s, %s)' AND
+                    location <@ '(%s, %s)'
+            """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
+
+            # Dispatch drivers to clients one at a time, from the client with
+            # the highest total billings down to the client with the lowest
+            # total billings, or until there are no more drivers available.
+            for client in clients:
+                # Find the closest driver to the client's source location
+                cursor.execute("""
+                SELECT  driver_id, location
+                FROM Location
+                WHERE   datetime = (
+                    SELECT dt FROM driver_recent_locations
+                    WHERE driver_id = Location.driver_id
+                    ) AND
+                        driver_id IN (%s)
+                """, (drivers_meet_conditions,))
+                driver_locations = cursor.fetchall()
+                closest_driver = min(
+                    driver_locations, key=lambda x: x[1].distance(client[1]))
+                # Dispatch the closest driver to the client
+                for driver in drivers_meet_conditions:
+                    # Dispatch a driver
+                    cursor.execute("""
+                    INSERT INTO Dispatch (driver_id, client_id, datetime,
+                    dispatch_location)
+                    VALUES (%s, %s, %s, %s)
+                    """, (driver[0], client[0], when, driver[2]))
+                    # Record the dispatch time as <when>
+                    cursor.execute("""
+                    UPDATE Dispatch
+                    SET datetime = %s
+                    WHERE driver_id = %s AND client_id = %s
+                    """, (when, driver[0], client[0]))
+                    # Update the dispatch car location as the driver's most
+                    # recent recorded location
+                    cursor.execute("""
+                    UPDATE Dispatch
+                    SET dispatch_location = %s
+                    WHERE driver_id = %s AND client_id = %s
+                    """, (driver[2], driver[0], client[0]))
+
+            return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
