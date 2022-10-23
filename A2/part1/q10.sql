@@ -21,10 +21,12 @@ DROP VIEW IF EXISTS DriverBills CASCADE;
 DROP VIEW IF EXISTS Driver20 CASCADE;
 DROP VIEW IF EXISTS Driver21 CASCADE;
 DROP VIEW IF EXISTS DriverAll CASCADE;
+DROP VIEW IF EXISTS AllDrivers CASCADE;
+DROP VIEW IF EXISTS Months CASCADE;
 -- Define views for your intermediate steps here:
 CREATE VIEW DriverRequest AS
 SELECT ClockedIn.driver_id,
-    to_char(Request.datetime, 'MM') as month,
+    CAST(to_char(Request.datetime, 'MM') AS CHAR(2)) as month,
     to_char(Request.datetime, 'YY') as year,
     Request.request_id,
     source <@> destination as mileage
@@ -60,14 +62,26 @@ FROM DriverBills
 WHERE year = '21'
 GROUP BY driver_id,
     month;
+CREATE VIEW Months AS
+SELECT CAST(to_char(generate_series(1, 12), '09') AS CHAR(2)) AS month;
+CREATE View AllDrivers AS
+SELECT driver_id,
+    month
+FROM Driver,
+    Months;
 CREATE View DriverAll As
-SELECT COALESCE(Driver21.driver_id, Driver20.driver_id) AS driver_id,
-    COALESCE(Driver21.month, Driver20.month) AS month,
-    mileage_2020,
-    billings_2020,
-    mileage_2021,
-    billings_2021
-FROM Driver20 NATURAL
+SELECT COALESCE(
+        Driver21.driver_id,
+        Driver20.driver_id,
+        AllDrivers.driver_id
+    ) AS driver_id,
+    COALESCE(Driver21.month, Driver20.month, AllDrivers.month) AS month,
+    COALESCE(mileage_2020, 0) as mileage_2020,
+    COALESCE(billings_2020, 0) as billings_2020,
+    COALESCE(mileage_2021, 0) as mileage_2021,
+    COALESCE(billings_2021, 0) as billings_2021
+FROM AllDrivers Natural
+    FULL join Driver20 NATURAL
     FULL JOIN Driver21;
 -- Your query that answers the question goes below the "insert into" line:
 INSERT INTO q10
