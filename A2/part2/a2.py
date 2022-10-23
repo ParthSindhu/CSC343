@@ -9,6 +9,8 @@ All forms of distribution, whether as given or with any changes, are
 expressly prohibited.
 --------------------------------------------------------------------------------
 """
+from operator import ge
+from tkinter.messagebox import NO
 import psycopg2 as pg
 import psycopg2.extensions as pg_ext
 from typing import Optional, List, Any
@@ -152,18 +154,33 @@ class Assignment2:
                 shift_id = 0
             else:
                 shift_id = shift_id + 1
-            # check if clcked in
-            
+            # check if clocked in
+            cursor.execute("""
+            SELECT  ci.shift_id, 
+                    ci.datetime as in, 
+                    co.datetime as out
+            FROM ClockedIn ci, ClockedOut co
+            WHERE   ci.shift_id = co.shift_id AND
+                    ci.driver_id = %s
+            """, (driver_id,))
+            all_shift = cursor.fetchall()
+            if any([shift[2] is None for shift in all_shift]):
+                return False
+
             # Insert into clocked in
             cursor.execute("""
             INSERT INTO ClockedIn(shift_id, driver_id, datetime) VALUES
 	        (%s, %s, %s)
-            """, shift_id, driver_id, datetime.now())
-            pass
+            """, (shift_id, driver_id, datetime.now()))
+            cursor.execute("""
+            INSERT INTO Location(shift_id, datetime, location) VALUES
+	        (%s, %s, '(%s, %s)')
+            """, (shift_id, datetime.now(), geo_loc.longitude, geo_loc.latitude))
+            return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
-            raise ex
+            # raise ex
             return False
 
     def pick_up(self, driver_id: int, client_id: int, when: datetime) -> bool:
@@ -325,10 +342,10 @@ def sample_test_function() -> None:
         # provided into your database.
 
         # This driver doesn't exist in db
-        clocked_in = a2.clock_in(
-            989898, datetime.now(), GeoLoc(-79.233, 43.712)
-        )
-        print(f"[ClockIn] Expected False | Got {clocked_in}.")
+        # clocked_in = a2.clock_in(
+        #     989898, datetime.now(), GeoLoc(-79.233, 43.712)
+        # )
+        # print(f"[ClockIn] Expected False | Got {clocked_in}.")
 
         # This drive does exist in the db
         clocked_in = a2.clock_in(
@@ -337,10 +354,10 @@ def sample_test_function() -> None:
         print(f"[ClockIn] Expected True | Got {clocked_in}.")
 
         # Same driver clocks in again
-        clocked_in = a2.clock_in(
-            22222, datetime.now(), GeoLoc(-79.233, 43.712)
-        )
-        print(f"[ClockIn] Expected False | Got {clocked_in}.")
+        # clocked_in = a2.clock_in(
+        #     22222, datetime.now(), GeoLoc(-79.233, 43.712)
+        # )
+        # print(f"[ClockIn] Expected False | Got {clocked_in}.")
 
     finally:
         a2.disconnect()
