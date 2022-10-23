@@ -122,11 +122,13 @@ FROM UntrainedLate NATURAL
 -- Your query that answers the question goes below the "insert into" line:
 INSERT INTO q4
 SELECT type,
-    number early,
+    number,
+    early,
     late
-FROM Trained
-Union all
+FROM Trained;
+INSERT INTO q4
 SELECT type,
-    number early,
+    number,
+    early,
     late
 FROM Untrained;
