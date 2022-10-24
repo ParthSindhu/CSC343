@@ -240,50 +240,41 @@ class Assignment2:
             ongoing = cursor.fetchone()
             if ongoing is None:
                 return False
-            
+
             shift_id = ongoing[0]
 
-            #check b: driver dispatched to pick up the client
+            # check b: driver dispatched to pick up the client
             cursor.execute("""
-                    CREATE TEMPORARY VIEW alreadyDispatched AS
                     SELECT request_id, client_id
                     FROM Request, Dispatch
                     WHERE Request.request_id = Dispatch.request_id
                     AND client_id = %s AND shift_id = %s;
+                    """, (client_id, shift_id,))
 
-                    CREATE TEMPORARY VIEW notDispatched AS
-                    SELECT request_id, client_id
-                    FROM Request 
-                    WHERE client_id = %s AND
-                    request_id NOT IN (SELECT request_id FROM alreadyDispatched); 
-                    SELECT request_id, client_id FROM alreadyDispatched UNION
-                    SELECT request_id, client_id FROM notDispatched;
-                    """, (client_id, shift_id, client_id,))
-            
             dispatching = cursor.fetchone()
             if dispatching is None:
-                return false
-            #DO WE NEED TO CALL DISPATCH? PRECONDITIONS?
+                return False
+            # DO WE NEED TO CALL DISPATCH? PRECONDITIONS?
 
             request_id = dispatching[0]
 
-            #check c: pick-up not recorded
+            # check c: pick-up not recorded
             cursor.execute("""
                     SELECT *
                     FROM Pickup
                     WHERE request_id = %s;
                     """, (request_id))
-            
+
             notpicked = cursor.fetchone()
             if notpicked is not None:
                 return False
-            
-            #insert
+
+            # insert
             cursor.execute("""
                     INSERT INTO Pickup(request_id, datetime) VALUES (%s, %s);
                     """, (request_id, datetime))
-                    
-            pass
+
+            return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
@@ -344,46 +335,58 @@ class Assignment2:
             cursor = self.connection.cursor()
             cursor.execute("""
             CREATE TEMPORARY VIEW temp AS
-            SELECT  client_id, source, destination
+            SELECT  client_id, source, destination, request_id
             FROM Client Natural Join Request
             WHERE   source @> '(%s, %s)' AND
                     source <@ '(%s, %s)' AND
                     Request.request_id NOT IN (SELECT request_id FROM Dispatch)
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
             cursor.execute("""
+            CREATE TEMPORARY VIEW temp_client AS
             SELECT  client_id, sum(amount) as total_billings
             FROM Client Natural Join Request Natural Join Billed
             WHERE client_id IN (SELECT client_id FROM temp)
             GROUP BY client_id
             ORDER BY total_billings DESC)
-            """,)
+            """)
+            # cursor.execute("""
+            # SELECT  client_id, source, destination, request_id
+            # """)
             clients = cursor.fetchall()
 
             # Find all drivers who are currently on an ongoing shift
-            clockedin_drivers = self.check_clocked_in()
+            cursor.execute("""
+            CREATE TEMPORARY VIEW shiftOver AS
+            SELECT shift_id
+            FROM ClockedIn, ClockedOut
+            WHERE ClockedIn.shift_id = ClockedOut.shift_id;
+
+            CREATE TEMPORARY VIEW shiftOngoing AS
+            (SELECT shift_id FROM ClockedIn) - (SELECT shift_id FROM shiftOver);
+            CREATE TEMPORARY VIEW driverOngoing AS
+            SELECT shift_id, driver_id
+            FROM shiftOngoing NATURAL JOIN ClockedIN
+            """)
             # Find all drivers who are available and are NOT currently
             # dispatched or on an ongoing ride
             cursor.execute("""
             CREATE TEMPORARY VIEW temp2 AS
             SELECT  driver_id, 
-                    Request.datetime as rt, 
                     Dispatch.datetime as dt, 
                     Pickup.datetime as pt, 
                     Dropoff.datetime as dot
             FROM ClockedIn, Request, Dispatch, Pickup, Dropoff
             WHERE   ClockedIn.shift_id = Dispatch.shift_id AND
-                    Dispatch.request_id = Request.request_id AND
-                    Request.request_id = Pickup.request_id AND
+                    Dispatch.request_id = Pickup.request_id AND
                     Pickup.request_id = Dropoff.request_id AND
             """)
             cursor.execute("""
-            CREATE TEMPORARY VIEW free_drivers AS
+            CREATE TEMPORARY VIEW no_free_drivers AS
             SELECT  driver_id
             FROM temp2
-            WHERE   rt  IS NOT NULL AND
-                    dt  IS NOT NULL AND
-                    pt  IS NOT NULL AND
-                    dot IS NOT NULL
+            WHERE   dt  IS NULL OR
+                    pt  IS NULL OR
+                    dot IS NULL OR
             """)
 
             # Find all drivers whose most recent recorded location is in the
@@ -405,20 +408,49 @@ class Assignment2:
                     location <@ '(%s, %s)'
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
 
+            cursor.execute("""
+            CREATE TEMPORARY VIEW driver_nearby AS
+            SELECT  driver_id, location
+            FROM driver_nearby_locations
+            WHERE driver_id NOT IN (SELECT driver_id FROM no_free_drivers)
+            AND driver_id IN (SELECT driver_id FROM driverOngoing)
+            """)
+
             # Dispatch drivers to clients one at a time, from the client with
             # the highest total billings down to the client with the lowest
             # total billings, or until there are no more drivers available.
             for client in clients:
                 # Find the closest driver to the client's source location
+
+                # Get client source location
                 cursor.execute("""
-                SELECT  driver_id, location
-                FROM Location
-                WHERE   datetime = (
-                    SELECT dt FROM driver_recent_locations
-                    WHERE driver_id = Location.driver_id
-                    ) AND
-                        driver_id IN (%s)
-                """, (drivers_meet_conditions,))
+                CREATE TEMPORARY VIEW client_source AS
+                SELECT source, client_id
+                FROM Request
+                WHERE client_id = %s
+                """, (client[0],))
+                # Find the closest driver to the client's source location
+
+                cursor.execute("""
+                SELECT  driver_id, source <@> location as distance
+                FROM client_source, driver_nearby
+                order by distance DESC
+                """)
+                driver = cursor.fetchall()
+                if len(driver) == 0:
+                    break
+                else:
+                    driver = driver[0]
+                    # Dispatch the driver to the client
+                    cursor.execute("""
+                    INSERT INTO Dispatch
+                    VALUES (%s, %s, %s, %s)
+                    """, (driver[0], client[0], when, driver[1]))
+
+                # Drop view
+                cursor.execute("""
+                DROP VIEW client_source CASCADE""")
+
                 driver_locations = cursor.fetchall()
                 closest_driver = min(
                     driver_locations, key=lambda x: x[1].distance(client[1]))
