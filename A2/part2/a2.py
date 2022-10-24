@@ -189,11 +189,11 @@ class Assignment2:
             cursor.execute("""
             INSERT INTO ClockedIn(shift_id, driver_id, datetime) VALUES
 	        (%s, %s, %s)
-            """, (shift_id, driver_id, datetime.now()))
+            """, (shift_id, driver_id, when))
             cursor.execute("""
             INSERT INTO Location(shift_id, datetime, location) VALUES
 	        (%s, %s, '(%s, %s)')
-            """, (shift_id, datetime.now(), geo_loc.longitude, geo_loc.latitude))
+            """, (shift_id, when, geo_loc.longitude, geo_loc.latitude))
             return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
@@ -272,7 +272,7 @@ class Assignment2:
             # insert
             cursor.execute("""
                     INSERT INTO Pickup(request_id, datetime) VALUES (%s, %s);
-                    """, (request_id, datetime))
+                    """, (request_id, when))
 
             return True
         except pg.Error as ex:
@@ -455,27 +455,6 @@ class Assignment2:
                 closest_driver = min(
                     driver_locations, key=lambda x: x[1].distance(client[1]))
                 # Dispatch the closest driver to the client
-                for driver in drivers_meet_conditions:
-                    # Dispatch a driver
-                    cursor.execute("""
-                    INSERT INTO Dispatch (driver_id, client_id, datetime,
-                    dispatch_location)
-                    VALUES (%s, %s, %s, %s)
-                    """, (driver[0], client[0], when, driver[2]))
-                    # Record the dispatch time as <when>
-                    cursor.execute("""
-                    UPDATE Dispatch
-                    SET datetime = %s
-                    WHERE driver_id = %s AND client_id = %s
-                    """, (when, driver[0], client[0]))
-                    # Update the dispatch car location as the driver's most
-                    # recent recorded location
-                    cursor.execute("""
-                    UPDATE Dispatch
-                    SET dispatch_location = %s
-                    WHERE driver_id = %s AND client_id = %s
-                    """, (driver[2], driver[0], client[0]))
-
             return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
