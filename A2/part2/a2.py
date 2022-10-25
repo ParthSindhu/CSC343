@@ -170,8 +170,15 @@ class Assignment2:
             - <when> is after all dates currently recorded in the database.
         """
         try:
-            # # TODO: implement this method
+            # TODO: implement this method
             cursor = self.connection.cursor()
+            # check if driver_id exists
+            cursor.execute("""
+            SELECT driver_id From Driver Where driver_id = %s
+            """, (driver_id,))
+            checkDriver = cursor.fetchone()
+            if checkDriver is None:
+                return False
             # get max shift id
             cursor.execute("""
             SELECT MAX(shift_id) from ClockedIn
@@ -225,6 +232,20 @@ class Assignment2:
         try:
             # TODO: implement this method
             cursor = self.connection.cursor()
+            # check if driver_id exists
+            cursor.execute("""
+            SELECT driver_id From Driver Where driver_id = %s
+            """, (driver_id,))
+            checkDriver = cursor.fetchone()
+            if checkDriver is None:
+                return False
+            # check if client_id exists
+            cursor.execute("""
+            SELECT client_id From Client Where client_id = %s
+            """, (client_id,))
+            checkClient = cursor.fetchone()
+            if checkClient is None:
+                return False
             # check a: driver on ongoing shift
             cursor.execute("""
                     CREATE TEMPORARY VIEW shiftOver AS
