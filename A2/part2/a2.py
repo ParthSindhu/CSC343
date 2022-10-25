@@ -176,7 +176,7 @@ class Assignment2:
             cursor.execute("""
             SELECT driver_id From Driver Where driver_id = %s
             """, (driver_id,))
-            checkDriver = fetchone()
+            checkDriver = cursor.fetchone()
             if checkDriver is None:
                 return False
             # get max shift id
@@ -236,14 +236,14 @@ class Assignment2:
             cursor.execute("""
             SELECT driver_id From Driver Where driver_id = %s
             """, (driver_id,))
-            checkDriver = fetchone()
+            checkDriver = cursor.fetchone()
             if checkDriver is None:
                 return False
             #check if client_id exists
             cursor.execute("""
             SELECT client_id From Client Where client_id = %s
             """, (client_id,))
-            checkClient = fetchone()
+            checkClient = cursor.fetchone()
             if checkClient is None:
                 return False
             # check a: driver on ongoing shift
