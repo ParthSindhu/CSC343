@@ -251,13 +251,16 @@ class Assignment2:
                     CREATE TEMPORARY VIEW shiftOver AS
                     SELECT shift_id
                     FROM ClockedIn, ClockedOut
-                    WHERE ClockedIn.shift_id = ClockedOut.shift_id;
-
+                    WHERE ClockedIn.shift_id = ClockedOut.shift_id
+            """)
+            cursor.execute("""
                     CREATE TEMPORARY VIEW shiftOngoing AS
-                    (SELECT shift_id FROM ClockedIn) MINUS (SELECT shift_id FROM shiftOver);
+                    (SELECT shift_id FROM ClockedIn) MINUS (SELECT shift_id FROM shiftOver)
+            """)
+            cursor.execute("""
                     SELECT shift_id, driver_id
                     FROM shiftOngoing NATURAL JOIN ClockedIN
-                    WHERE driver_id = %s;
+                    WHERE driver_id = %s
                     """, (driver_id,))
             ongoing = cursor.fetchone()
             if ongoing is None:
@@ -270,7 +273,7 @@ class Assignment2:
                     SELECT request_id, client_id
                     FROM Request, Dispatch
                     WHERE Request.request_id = Dispatch.request_id
-                    AND client_id = %s AND shift_id = %s;
+                    AND client_id = %s AND shift_id = %s
                     """, (client_id, shift_id,))
 
             dispatching = cursor.fetchone()
@@ -284,7 +287,7 @@ class Assignment2:
             cursor.execute("""
                     SELECT *
                     FROM Pickup
-                    WHERE request_id = %s;
+                    WHERE request_id = %s
                     """, (request_id))
 
             notpicked = cursor.fetchone()
@@ -293,7 +296,7 @@ class Assignment2:
 
             # insert
             cursor.execute("""
-                    INSERT INTO Pickup(request_id, datetime) VALUES (%s, %s);
+                    INSERT INTO Pickup(request_id, datetime) VALUES (%s, %s)
                     """, (request_id, when))
 
             return True
