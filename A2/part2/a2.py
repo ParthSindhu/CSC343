@@ -171,30 +171,30 @@ class Assignment2:
         """
         try:
             # # TODO: implement this method
-            # cursor = self.connection.cursor()
-            # # get max shift id
-            # cursor.execute("""
-            # SELECT MAX(shift_id) from ClockedIn
-            # """)
-            # shift_id = cursor.fetchone()[0]
-            # if shift_id is None:
-            #     shift_id = 0
-            # else:
-            #     shift_id = shift_id + 1
-            # # check if clocked in
-            # if self.check_clocked_in(driver_id):
-            #     return False
+            cursor = self.connection.cursor()
+            # get max shift id
+            cursor.execute("""
+            SELECT MAX(shift_id) from ClockedIn
+            """)
+            shift_id = cursor.fetchone()[0]
+            if shift_id is None:
+                shift_id = 0
+            else:
+                shift_id = shift_id + 1
+            # check if clocked in
+            if self.check_clocked_in(driver_id):
+                return False
 
-            # # Insert into clocked in
-            # cursor.execute("""
-            # INSERT INTO ClockedIn(shift_id, driver_id, datetime) VALUES
-            # (%s, %s, %s)
-            # """, (shift_id, driver_id, when))
-            # cursor.execute("""
-            # INSERT INTO Location(shift_id, datetime, location) VALUES
-            # (%s, %s, '(%s, %s)')
-            # """, (shift_id, when, geo_loc.longitude, geo_loc.latitude))
-            # cursor.close()
+            # Insert into clocked in
+            cursor.execute("""
+            INSERT INTO ClockedIn(shift_id, driver_id, datetime) VALUES
+            (%s, %s, %s)
+            """, (shift_id, driver_id, when))
+            cursor.execute("""
+            INSERT INTO Location(shift_id, datetime, location) VALUES
+            (%s, %s, '(%s, %s)')
+            """, (shift_id, when, geo_loc.longitude, geo_loc.latitude))
+            cursor.close()
             return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
@@ -335,7 +335,7 @@ class Assignment2:
             # Find all clients who have requested rides in this area
             cursor = self.connection.cursor()
             cursor.execute("""
-            CREATE TEMPORARY VIEW temp AS
+            CREATE TEMPORARY VIEW clients_in_area_no_dispatch AS
             SELECT  client_id, source, destination, request_id
             FROM Client Natural Join Request
             WHERE   source @> '(%s, %s)' AND
@@ -343,16 +343,22 @@ class Assignment2:
                     Request.request_id NOT IN (SELECT request_id FROM Dispatch)
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
             cursor.execute("""
-            CREATE TEMPORARY VIEW temp_client AS
+            CREATE TEMPORARY VIEW clent_total_billings AS
             SELECT  client_id, sum(amount) as total_billings
             FROM Client Natural Join Request Natural Join Billed
-            WHERE client_id IN (SELECT client_id FROM temp)
             GROUP BY client_id
-            ORDER BY total_billings DESC)
+            ORDER BY total_billings DESC
+
+
+            CREATE TEMPORARY VIEW clients_in_area_no_dispatch_ordered AS
+            SELECT  client_id, source, total_billings, request_id
+            FROM clients_in_area_no_dispatch NATURAL JOIN client_total_billings
+            ORDER BY total_billings DESC
             """)
-            # cursor.execute("""
-            # SELECT  client_id, source, destination, request_id
-            # """)
+
+            cursor.execute("""
+            SELECT * from clients_in_area_no_dispatch_ordered;
+            """)
             clients = cursor.fetchall()
 
             # Find all drivers who are currently on an ongoing shift
@@ -371,7 +377,7 @@ class Assignment2:
             # Find all drivers who are available and are NOT currently
             # dispatched or on an ongoing ride
             cursor.execute("""
-            CREATE TEMPORARY VIEW temp2 AS
+            CREATE TEMPORARY VIEW driver_times AS
             SELECT  driver_id, 
                     Dispatch.datetime as dt, 
                     Pickup.datetime as pt, 
@@ -384,7 +390,7 @@ class Assignment2:
             cursor.execute("""
             CREATE TEMPORARY VIEW no_free_drivers AS
             SELECT  driver_id
-            FROM temp2
+            FROM driver_times
             WHERE   dt  IS NULL OR
                     pt  IS NULL OR
                     dot IS NULL OR
@@ -396,14 +402,15 @@ class Assignment2:
             CREATE TEMPORARY VIEW driver_recent_locations AS
             SELECT  driver_id, MAX(datetime) dt
             FROM Location
+            GROUP BY driver_id
             """)
             cursor.execute("""
             CREATE TEMPORARY VIEW driver_nearby_locations AS
             SELECT  driver_id, location
-            FROM Location
+            FROM Location l1
             WHERE   datetime = (
                 SELECT dt FROM driver_recent_locations
-                WHERE driver_id = Location.driver_id
+                WHERE driver_id = l1.driver_id
                 ) AND
                     location @> '(%s, %s)' AND
                     location <@ '(%s, %s)'
@@ -411,10 +418,9 @@ class Assignment2:
 
             cursor.execute("""
             CREATE TEMPORARY VIEW driver_nearby AS
-            SELECT  driver_id, location
-            FROM driver_nearby_locations
+            SELECT  driver_id, location, shift_id
+            FROM driver_nearby_locations NATURE JOIN driverOngoing
             WHERE driver_id NOT IN (SELECT driver_id FROM no_free_drivers)
-            AND driver_id IN (SELECT driver_id FROM driverOngoing)
             """)
 
             # Dispatch drivers to clients one at a time, from the client with
@@ -422,45 +428,34 @@ class Assignment2:
             # total billings, or until there are no more drivers available.
             for client in clients:
                 # Find the closest driver to the client's source location
-
-                # Get client source location
                 cursor.execute("""
-                CREATE TEMPORARY VIEW client_source AS
-                SELECT source, client_id
-                FROM Request
-                WHERE client_id = %s
+                SELECT  driver_id, source <@> location as distance, location
+                FROM clients_in_area_no_dispatch_ordered, driver_nearby
+                WHERE   client_id = %s AND
+                order by distance ASC
                 """, (client[0],))
-                # Find the closest driver to the client's source location
-
-                cursor.execute("""
-                SELECT  driver_id, source <@> location as distance
-                FROM client_source, driver_nearby
-                order by distance DESC
-                """)
-                driver = cursor.fetchall()
-                if len(driver) == 0:
+                driver = cursor.fetchone()
+                if driver is None:
                     break
                 else:
                     driver = driver[0]
                     # Dispatch the driver to the client
                     cursor.execute("""
-                    INSERT INTO Dispatch
-                    VALUES (%s, %s, %s, %s)
-                    """, (driver[0], client[0], when, driver[1]))
-
-                # Drop view
-                cursor.execute("""
-                DROP VIEW client_source CASCADE""")
-
-                driver_locations = cursor.fetchall()
-                closest_driver = min(
-                    driver_locations, key=lambda x: x[1].distance(client[1]))
-                # Dispatch the closest driver to the client
+                    INSERT INTO Dispatch(request_id, shift_id, car_location, datetime) 
+                    VALUES
+                    (%s, %s, '(%s, %s)', %s)
+                    """, (client[3], driver[2], driver[1][0], driver[1][1], when))
+                    # Remove the driver from the list of available drivers
+                    cursor.execute("""
+                    DELETE FROM driver_nearby
+                    WHERE driver_id = %s
+                    """, (driver[0],))
+            cursor.close()
             return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
-            # raise ex
+            raise ex
             return
 
     # =======================     Helper methods     ======================= #
