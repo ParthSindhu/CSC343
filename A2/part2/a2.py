@@ -254,7 +254,7 @@ class Assignment2:
                     WHERE ClockedIn.shift_id = ClockedOut.shift_id;
 
                     CREATE TEMPORARY VIEW shiftOngoing AS
-                    (SELECT shift_id FROM ClockedIn) - (SELECT shift_id FROM shiftOver);
+                    (SELECT shift_id FROM ClockedIn) MINUS (SELECT shift_id FROM shiftOver);
                     SELECT shift_id, driver_id
                     FROM shiftOngoing NATURAL JOIN ClockedIN
                     WHERE driver_id = %s;
