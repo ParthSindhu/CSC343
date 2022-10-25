@@ -170,31 +170,38 @@ class Assignment2:
             - <when> is after all dates currently recorded in the database.
         """
         try:
-            # # TODO: implement this method
-            # cursor = self.connection.cursor()
-            # # get max shift id
-            # cursor.execute("""
-            # SELECT MAX(shift_id) from ClockedIn
-            # """)
-            # shift_id = cursor.fetchone()[0]
-            # if shift_id is None:
-            #     shift_id = 0
-            # else:
-            #     shift_id = shift_id + 1
-            # # check if clocked in
-            # if self.check_clocked_in(driver_id):
-            #     return False
+            # TODO: implement this method
+            cursor = self.connection.cursor()
+            #check if driver_id exists
+            cursor.execute("""
+            SELECT driver_id From Driver Where driver_id = %s
+            """, (driver_id,))
+            checkDriver = fetchone()
+            if checkDriver is None:
+                return False
+            # get max shift id
+            cursor.execute("""
+            SELECT MAX(shift_id) from ClockedIn
+            """)
+            shift_id = cursor.fetchone()[0]
+            if shift_id is None:
+                shift_id = 0
+            else:
+                shift_id = shift_id + 1
+            # check if clocked in
+            if self.check_clocked_in(driver_id):
+                return False
 
-            # # Insert into clocked in
-            # cursor.execute("""
-            # INSERT INTO ClockedIn(shift_id, driver_id, datetime) VALUES
-            # (%s, %s, %s)
-            # """, (shift_id, driver_id, when))
-            # cursor.execute("""
-            # INSERT INTO Location(shift_id, datetime, location) VALUES
-            # (%s, %s, '(%s, %s)')
-            # """, (shift_id, when, geo_loc.longitude, geo_loc.latitude))
-            # cursor.close()
+            # Insert into clocked in
+            cursor.execute("""
+            INSERT INTO ClockedIn(shift_id, driver_id, datetime) VALUES
+            (%s, %s, %s)
+            """, (shift_id, driver_id, when))
+            cursor.execute("""
+            INSERT INTO Location(shift_id, datetime, location) VALUES
+            (%s, %s, '(%s, %s)')
+            """, (shift_id, when, geo_loc.longitude, geo_loc.latitude))
+            cursor.close()
             return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
@@ -225,6 +232,20 @@ class Assignment2:
         try:
             # TODO: implement this method
             cursor = self.connection.cursor()
+            #check if driver_id exists
+            cursor.execute("""
+            SELECT driver_id From Driver Where driver_id = %s
+            """, (driver_id,))
+            checkDriver = fetchone()
+            if checkDriver is None:
+                return False
+            #check if client_id exists
+            cursor.execute("""
+            SELECT client_id From Client Where client_id = %s
+            """, (client_id,))
+            checkClient = fetchone()
+            if checkClient is None:
+                return False
             # check a: driver on ongoing shift
             cursor.execute("""
                     CREATE TEMPORARY VIEW shiftOver AS
