@@ -255,7 +255,7 @@ class Assignment2:
             """)
             cursor.execute("""
                     CREATE TEMPORARY VIEW shiftOngoing AS
-                    (SELECT shift_id FROM ClockedIn) MINUS (SELECT shift_id FROM shiftOver)
+                    (SELECT shift_id FROM ClockedIn) - (SELECT shift_id FROM shiftOver)
             """)
             cursor.execute("""
                     SELECT shift_id, driver_id
