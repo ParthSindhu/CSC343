@@ -270,7 +270,7 @@ class Assignment2:
 
             # check b: driver dispatched to pick up the client
             cursor.execute("""
-                    SELECT request_id, client_id
+                    SELECT Request.request_id, client_id
                     FROM Request, Dispatch
                     WHERE Request.request_id = Dispatch.request_id
                     AND client_id = %s AND shift_id = %s
@@ -366,20 +366,20 @@ class Assignment2:
                     source[1] > %s AND
                     source[0] < %s AND
                     source[1] < %s AND
-                    Request.request_id NOT IN (SELECT request_id FROM Dispatch)
+                    Request.request_id NOT IN (SELECT request_id FROM Dispatch);
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
             cursor.execute("""
             CREATE TEMPORARY VIEW clent_total_billings AS
             SELECT  client_id, sum(amount) as total_billings
             FROM Client Natural Join Request Natural Join Billed
             GROUP BY client_id
-            ORDER BY total_billings DESC
+            ORDER BY total_billings DESC;
 
 
             CREATE TEMPORARY VIEW clients_in_area_no_dispatch_ordered AS
             SELECT  client_id, source, total_billings, request_id
             FROM clients_in_area_no_dispatch NATURAL JOIN client_total_billings
-            ORDER BY total_billings DESC
+            ORDER BY total_billings DESC;
             """)
 
             cursor.execute("""
