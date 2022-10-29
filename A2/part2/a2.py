@@ -433,12 +433,12 @@ class Assignment2:
             """)
             cursor.execute("""
             CREATE TEMPORARY VIEW driver_nearby_locations AS
-            SELECT  driver_id, location
-            FROM Location l1, ClockedIn
-            WHERE   Location.shift_id = ClockedIn.shift_id AND
+            SELECT  c.driver_id, location
+            FROM Location l1, ClockedIn c
+            WHERE   l1.shift_id = c.shift_id AND
                 datetime = (
                 SELECT dt FROM driver_recent_locations
-                WHERE driver_id = l1.driver_id
+                WHERE driver_id = c.driver_id
                 ) AND
                 location[0] > %s AND
                 location[1] > %s AND
