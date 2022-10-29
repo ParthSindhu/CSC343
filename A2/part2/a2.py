@@ -390,7 +390,7 @@ class Assignment2:
             # Find all drivers who are currently on an ongoing shift
             cursor.execute("""
             CREATE TEMPORARY VIEW shiftOver AS
-            SELECT shift_id
+            SELECT ClockedIn.shift_id
             FROM ClockedIn, ClockedOut
             WHERE ClockedIn.shift_id = ClockedOut.shift_id;
 
@@ -398,7 +398,7 @@ class Assignment2:
             (SELECT shift_id FROM ClockedIn) EXCEPT (SELECT shift_id FROM shiftOver);
             CREATE TEMPORARY VIEW driverOngoing AS
             SELECT shift_id, driver_id
-            FROM shiftOngoing NATURAL JOIN ClockedIN
+            FROM shiftOngoing NATURAL JOIN ClockedIN;
             """)
             # Find all drivers who are available and are NOT currently
             # dispatched or on an ongoing ride
@@ -411,7 +411,7 @@ class Assignment2:
             FROM ClockedIn, Request, Dispatch, Pickup, Dropoff
             WHERE   ClockedIn.shift_id = Dispatch.shift_id AND
                     Dispatch.request_id = Pickup.request_id AND
-                    Pickup.request_id = Dropoff.request_id AND
+                    Pickup.request_id = Dropoff.request_id;
             """)
             cursor.execute("""
             CREATE TEMPORARY VIEW no_free_drivers AS
@@ -419,7 +419,7 @@ class Assignment2:
             FROM driver_times
             WHERE   dt  IS NULL OR
                     pt  IS NULL OR
-                    dot IS NULL OR
+                    dot IS NULL;
             """)
 
             # Find all drivers whose most recent recorded location is in the
@@ -428,7 +428,7 @@ class Assignment2:
             CREATE TEMPORARY VIEW driver_recent_locations AS
             SELECT  driver_id, MAX(datetime) dt
             FROM Location
-            GROUP BY driver_id
+            GROUP BY driver_id;
             """)
             cursor.execute("""
             CREATE TEMPORARY VIEW driver_nearby_locations AS
@@ -441,14 +441,14 @@ class Assignment2:
                     location[0] > %s AND
                     location[1] > %s AND
                     location[0] < %s AND
-                    location[1] < %s '
+                    location[1] < %s ;'
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
 
             cursor.execute("""
             CREATE TEMPORARY VIEW driver_nearby AS
             SELECT  driver_id, location, shift_id
             FROM driver_nearby_locations NATURE JOIN driverOngoing
-            WHERE driver_id NOT IN (SELECT driver_id FROM no_free_drivers)
+            WHERE driver_id NOT IN (SELECT driver_id FROM no_free_drivers);
             """)
 
             # Dispatch drivers to clients one at a time, from the client with
@@ -460,7 +460,7 @@ class Assignment2:
                 SELECT  driver_id, source <@> location as distance, location
                 FROM clients_in_area_no_dispatch_ordered, driver_nearby
                 WHERE   client_id = %s AND
-                order by distance ASC
+                order by distance ASC;
                 """, (client[0],))
                 driver = cursor.fetchone()
                 if driver is None:
@@ -471,12 +471,12 @@ class Assignment2:
                     cursor.execute("""
                     INSERT INTO Dispatch(request_id, shift_id, car_location, datetime) 
                     VALUES
-                    (%s, %s, '(%s, %s)', %s)
+                    (%s, %s, '(%s, %s)', %s);
                     """, (client[3], driver[2], driver[1][0], driver[1][1], when))
                     # Remove the driver from the list of available drivers
                     cursor.execute("""
                     DELETE FROM driver_nearby
-                    WHERE driver_id = %s
+                    WHERE driver_id = %s;
                     """, (driver[0],))
             cursor.close()
             return True
