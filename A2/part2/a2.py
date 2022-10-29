@@ -303,7 +303,7 @@ class Assignment2:
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
-            # raise ex
+            raise ex
             return False
 
     # ===================== Dispatcher-related methods ===================== #
@@ -362,8 +362,8 @@ class Assignment2:
             CREATE TEMPORARY VIEW clients_in_area_no_dispatch AS
             SELECT  client_id, source, destination, request_id
             FROM Client Natural Join Request
-            WHERE   source @> point '(%s, %s)' AND
-                    source <@ point '(%s, %s)' AND
+            WHERE   source::point @> point '(%s, %s)' AND
+                    source::point <@ point '(%s, %s)' AND
                     Request.request_id NOT IN (SELECT request_id FROM Dispatch)
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
             cursor.execute("""
@@ -436,8 +436,8 @@ class Assignment2:
                 SELECT dt FROM driver_recent_locations
                 WHERE driver_id = l1.driver_id
                 ) AND
-                    location @> point '(%s, %s)' AND
-                    location <@ point '(%s, %s)'
+                    location::point @> point '(%s, %s)' AND
+                    location::point <@ point '(%s, %s)'
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
 
             cursor.execute("""

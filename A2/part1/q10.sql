@@ -29,7 +29,7 @@ SELECT ClockedIn.driver_id,
     CAST(to_char(Request.datetime, 'MM') AS CHAR(2)) as month,
     to_char(Request.datetime, 'YY') as year,
     Request.request_id,
-    source <@> destination as mileage
+    source <@ > destination as mileage
 FROM Request,
     Dispatch,
     ClockedIn
@@ -64,7 +64,7 @@ GROUP BY driver_id,
     month;
 CREATE VIEW Months AS
 SELECT CAST(
-        TRIM(to_char(generate_series(1, 12), '09')) AS CHAR(2)
+        TRIM(to_char(generate_series(1, 12), 'FM09')) AS CHAR(2)
     ) AS month;
 CREATE View AllDrivers AS
 SELECT driver_id,
