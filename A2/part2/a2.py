@@ -436,7 +436,7 @@ class Assignment2:
             SELECT  c.driver_id, location
             FROM Location l1, ClockedIn c
             WHERE   l1.shift_id = c.shift_id AND
-                datetime = (
+                l1.datetime = (
                 SELECT dt FROM driver_recent_locations
                 WHERE driver_id = c.driver_id
                 ) AND
