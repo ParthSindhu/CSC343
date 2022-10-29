@@ -426,22 +426,24 @@ class Assignment2:
             # area bounded by <nw> and <se>
             cursor.execute("""
             CREATE TEMPORARY VIEW driver_recent_locations AS
-            SELECT  driver_id, MAX(datetime) dt
-            FROM Location
+            SELECT  driver_id, MAX(Location.datetime) dt
+            FROM Location , ClockedIn
+            WHERE   Location.shift_id = ClockedIn.shift_id
             GROUP BY driver_id;
             """)
             cursor.execute("""
             CREATE TEMPORARY VIEW driver_nearby_locations AS
             SELECT  driver_id, location
-            FROM Location l1
-            WHERE   datetime = (
+            FROM Location l1, ClockedIn
+            WHERE   Location.shift_id = ClockedIn.shift_id AND
+                datetime = (
                 SELECT dt FROM driver_recent_locations
                 WHERE driver_id = l1.driver_id
                 ) AND
-                    location[0] > %s AND
-                    location[1] > %s AND
-                    location[0] < %s AND
-                    location[1] < %s ;'
+                location[0] > %s AND
+                location[1] > %s AND
+                location[0] < %s AND
+                location[1] < %s ;'
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
 
             cursor.execute("""
@@ -484,7 +486,7 @@ class Assignment2:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
             raise ex
-            return
+            return False
 
     # =======================     Helper methods     ======================= #
 
