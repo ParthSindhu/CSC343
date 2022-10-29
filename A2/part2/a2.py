@@ -255,7 +255,7 @@ class Assignment2:
             """)
             cursor.execute("""
                     CREATE TEMPORARY VIEW shiftOngoing AS
-                    (SELECT shift_id FROM ClockedIn) - (SELECT shift_id FROM shiftOver)
+                    (SELECT shift_id FROM ClockedIn) EXCEPT (SELECT shift_id FROM shiftOver)
             """)
             cursor.execute("""
                     SELECT shift_id, driver_id
@@ -363,7 +363,7 @@ class Assignment2:
             SELECT  client_id, source, destination, request_id
             FROM Client Natural Join Request
             WHERE   source[0] > %s AND
-            WHERE   source[1] > %s AND
+                    source[1] > %s AND
                     source[0] < %s AND
                     source[1] < %s AND
                     Request.request_id NOT IN (SELECT request_id FROM Dispatch)
@@ -395,7 +395,7 @@ class Assignment2:
             WHERE ClockedIn.shift_id = ClockedOut.shift_id;
 
             CREATE TEMPORARY VIEW shiftOngoing AS
-            (SELECT shift_id FROM ClockedIn) - (SELECT shift_id FROM shiftOver);
+            (SELECT shift_id FROM ClockedIn) EXCEPT (SELECT shift_id FROM shiftOver);
             CREATE TEMPORARY VIEW driverOngoing AS
             SELECT shift_id, driver_id
             FROM shiftOngoing NATURAL JOIN ClockedIN
