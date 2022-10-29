@@ -29,7 +29,7 @@ SELECT ClockedIn.driver_id,
     CAST(to_char(Request.datetime, 'MM') AS CHAR(2)) as month,
     to_char(Request.datetime, 'YY') as year,
     Request.request_id,
-    source <@ > destination as mileage
+    source <@> destination as mileage
 FROM Request,
     Dispatch,
     ClockedIn
