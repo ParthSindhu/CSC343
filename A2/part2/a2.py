@@ -288,7 +288,7 @@ class Assignment2:
                     SELECT *
                     FROM Pickup
                     WHERE request_id = %s
-                    """, (request_id))
+                    """, (str(request_id)))
 
             notpicked = cursor.fetchone()
             if notpicked is not None:
@@ -369,7 +369,7 @@ class Assignment2:
                     Request.request_id NOT IN (SELECT request_id FROM Dispatch);
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
             cursor.execute("""
-            CREATE TEMPORARY VIEW clent_total_billings AS
+            CREATE TEMPORARY VIEW client_total_billings AS
             SELECT  client_id, sum(amount) as total_billings
             FROM Client Natural Join Request Natural Join Billed
             GROUP BY client_id
