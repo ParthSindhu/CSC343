@@ -443,7 +443,7 @@ class Assignment2:
                 location[0] > %s AND
                 location[1] > %s AND
                 location[0] < %s AND
-                location[1] < %s ;'
+                location[1] < %s;
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
 
             cursor.execute("""
@@ -480,11 +480,13 @@ class Assignment2:
                     DELETE FROM driver_nearby
                     WHERE driver_id = %s;
                     """, (driver[0],))
+
             cursor.close()
             return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
+            self.connection.rollback()
             raise ex
             return False
 
