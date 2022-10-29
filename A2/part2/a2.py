@@ -249,7 +249,7 @@ class Assignment2:
             # check a: driver on ongoing shift
             cursor.execute("""
                     CREATE TEMPORARY VIEW shiftOver AS
-                    SELECT shift_id
+                    SELECT ClockedIn.shift_id
                     FROM ClockedIn, ClockedOut
                     WHERE ClockedIn.shift_id = ClockedOut.shift_id
             """)
@@ -362,8 +362,8 @@ class Assignment2:
             CREATE TEMPORARY VIEW clients_in_area_no_dispatch AS
             SELECT  client_id, source, destination, request_id
             FROM Client Natural Join Request
-            WHERE   source::point @> point '(%s, %s)' AND
-                    source::point <@ point '(%s, %s)' AND
+            WHERE   source::geo_loc @> geo_loc '(%s, %s)' AND
+                    source::geo_loc <@ geo_loc '(%s, %s)' AND
                     Request.request_id NOT IN (SELECT request_id FROM Dispatch)
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
             cursor.execute("""
@@ -436,8 +436,8 @@ class Assignment2:
                 SELECT dt FROM driver_recent_locations
                 WHERE driver_id = l1.driver_id
                 ) AND
-                    location::point @> point '(%s, %s)' AND
-                    location::point <@ point '(%s, %s)'
+                    location::geo_loc @> geo_loc '(%s, %s)' AND
+                    location::geo_loc <@ geo_loc '(%s, %s)'
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
 
             cursor.execute("""
