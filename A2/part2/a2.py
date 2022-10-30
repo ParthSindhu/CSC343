@@ -455,7 +455,6 @@ class Assignment2:
             # Dispatch drivers to clients one at a time, from the client with
             # the highest total billings down to the client with the lowest
             # total billings, or until there are no more drivers available.
-            print("clients: ", clients)
             selected_drivers = []
             for client in clients:
                 # Find the closest driver to the client's source location
@@ -589,7 +588,7 @@ def sample_test_function() -> None:
         se = GeoLoc(-20.0, 48.5)  # SE corner of the area
 
         dispatch = a2.dispatch(nw, se, dt)
-        print(f"[Dispatch] Expected True | Got {dispatch}.")
+        print(f"[Dispatch] Check dispatch table in db.")
 
         # Same driver clocks in again
         # clocked_in = a2.clock_in(
