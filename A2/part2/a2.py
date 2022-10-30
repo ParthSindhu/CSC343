@@ -170,18 +170,17 @@ class Assignment2:
             - <when> is after all dates currently recorded in the database.
         """
         try:
-            # TODO: implement this method
             cursor = self.connection.cursor()
             # check if driver_id exists
             cursor.execute("""
-            SELECT driver_id From Driver Where driver_id = %s
+            SELECT driver_id From Driver Where driver_id = %s;
             """, (driver_id,))
             checkDriver = cursor.fetchone()
             if checkDriver is None:
                 return False
             # get max shift id
             cursor.execute("""
-            SELECT MAX(shift_id) from ClockedIn
+            SELECT MAX(shift_id) from ClockedIn;
             """)
             shift_id = cursor.fetchone()[0]
             if shift_id is None:
@@ -195,11 +194,11 @@ class Assignment2:
             # Insert into clocked in
             cursor.execute("""
             INSERT INTO ClockedIn(shift_id, driver_id, datetime) VALUES
-            (%s, %s, %s)
+            (%s, %s, %s);
             """, (shift_id, driver_id, when))
             cursor.execute("""
             INSERT INTO Location(shift_id, datetime, location) VALUES
-            (%s, %s, '(%s, %s)')
+            (%s, %s, '(%s, %s)');
             """, (shift_id, when, geo_loc.longitude, geo_loc.latitude))
             cursor.close()
             return True
@@ -230,18 +229,17 @@ class Assignment2:
             - <when> is after all dates currently recorded in the database.
         """
         try:
-            # TODO: implement this method
             cursor = self.connection.cursor()
             # check if driver_id exists
             cursor.execute("""
-            SELECT driver_id From Driver Where driver_id = %s
+            SELECT driver_id From Driver Where driver_id = %s;
             """, (driver_id,))
             checkDriver = cursor.fetchone()
             if checkDriver is None:
                 return False
             # check if client_id exists
             cursor.execute("""
-            SELECT client_id From Client Where client_id = %s
+            SELECT client_id From Client Where client_id = %s;
             """, (client_id,))
             checkClient = cursor.fetchone()
             if checkClient is None:
@@ -251,16 +249,16 @@ class Assignment2:
                     CREATE TEMPORARY VIEW shiftOver AS
                     SELECT ClockedIn.shift_id
                     FROM ClockedIn, ClockedOut
-                    WHERE ClockedIn.shift_id = ClockedOut.shift_id
+                    WHERE ClockedIn.shift_id = ClockedOut.shift_id;
             """)
             cursor.execute("""
                     CREATE TEMPORARY VIEW shiftOngoing AS
-                    (SELECT shift_id FROM ClockedIn) EXCEPT (SELECT shift_id FROM shiftOver)
+                    (SELECT shift_id FROM ClockedIn) EXCEPT (SELECT shift_id FROM shiftOver);
             """)
             cursor.execute("""
                     SELECT shift_id, driver_id
                     FROM shiftOngoing NATURAL JOIN ClockedIN
-                    WHERE driver_id = %s
+                    WHERE driver_id = %s;
                     """, (driver_id,))
             ongoing = cursor.fetchone()
             if ongoing is None:
@@ -273,7 +271,7 @@ class Assignment2:
                     SELECT Request.request_id, client_id
                     FROM Request, Dispatch
                     WHERE Request.request_id = Dispatch.request_id
-                    AND client_id = %s AND shift_id = %s
+                    AND client_id = %s AND shift_id = %s;
                     """, (client_id, shift_id,))
 
             dispatching = cursor.fetchone()
@@ -287,7 +285,7 @@ class Assignment2:
             cursor.execute("""
                     SELECT *
                     FROM Pickup
-                    WHERE request_id = %s
+                    WHERE request_id = %s;
                     """, (str(request_id)))
 
             notpicked = cursor.fetchone()
@@ -296,14 +294,15 @@ class Assignment2:
 
             # insert
             cursor.execute("""
-                    INSERT INTO Pickup(request_id, datetime) VALUES (%s, %s)
+                    INSERT INTO Pickup(request_id, datetime) VALUES (%s, %s);
                     """, (request_id, when))
+            self.connection.commit()
 
             return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
-            raise ex
+            # raise ex
             return False
 
     # ===================== Dispatcher-related methods ===================== #
@@ -479,19 +478,20 @@ class Assignment2:
                     VALUES
                     (%s, %s, '(%s, %s)', %s);
                     """, (str(client[3]), str(driver[3]), driver[2].longitude, driver[2].latitude, when))
+
                     # Remove the driver from the list of available drivers
                     selected_drivers.append(driver[0])
                     # cursor.execute("""
                     # DELETE FROM driver_nearby
                     # WHERE driver_id = %s;
                     # """, (driver[0],))
-
+            self.connection.commit()
             cursor.close()
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
             self.connection.rollback()
-            # raise ex
+            raise ex
 
     # =======================     Helper methods     ======================= #
 
