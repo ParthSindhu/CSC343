@@ -361,10 +361,7 @@ class Assignment2:
             CREATE TEMPORARY VIEW clients_in_area_no_dispatch AS
             SELECT  client_id, source, destination, request_id
             FROM Client Natural Join Request
-            WHERE   source[0] > %s AND
-                    source[1] > %s AND
-                    source[0] < %s AND
-                    source[1] < %s AND
+            WHERE   source::point <@ box '((%s, %s), (%s, %s))' AND
                     Request.request_id NOT IN (SELECT request_id FROM Dispatch);
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
             cursor.execute("""
@@ -439,10 +436,7 @@ class Assignment2:
                 SELECT dt FROM driver_recent_locations
                 WHERE driver_id = c.driver_id
                 ) AND
-                location[0] > %s AND
-                location[1] > %s AND
-                location[0] < %s AND
-                location[1] < %s;
+                location::point <@ box '((%s, %s), (%s, %s))';
             """, (nw.longitude, nw.latitude, se.longitude, se.latitude))
 
             cursor.execute("""

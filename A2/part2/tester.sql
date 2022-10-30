@@ -16,10 +16,7 @@ SELECT client_id,
     request_id
 FROM Client
     Natural Join Request
-WHERE source [0] > -21.5
-    AND source [1] > 44.5
-    AND source [0] < -20
-    AND source [1] < 48.5
+WHERE source::point <@ box '((-21.5,44.5),(-20,48.5))'
     AND Request.request_id NOT IN (
         SELECT request_id
         FROM Dispatch
@@ -97,10 +94,7 @@ WHERE l1.shift_id = c.shift_id
         FROM driver_recent_locations
         WHERE driver_id = c.driver_id
     )
-    AND location [0] > -21.5
-    AND location [1] > 44.5
-    AND location [0] < -20.0
-    AND location [1] < 48.5;
+    AND location::point <@ box '((-21.5,44.5),(-20,48.5))';
 CREATE VIEW driver_nearby AS
 SELECT driver_id,
     location,
