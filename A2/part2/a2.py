@@ -449,46 +449,49 @@ class Assignment2:
             cursor.execute("""
             CREATE TEMPORARY VIEW driver_nearby AS
             SELECT  driver_id, location, shift_id
-            FROM driver_nearby_locations NATURE JOIN driverOngoing
+            FROM driver_nearby_locations NATURAL JOIN driverOngoing
             WHERE driver_id NOT IN (SELECT driver_id FROM no_free_drivers);
             """)
 
             # Dispatch drivers to clients one at a time, from the client with
             # the highest total billings down to the client with the lowest
             # total billings, or until there are no more drivers available.
+            print("clients: ", clients)
+            selected_drivers = []
             for client in clients:
                 # Find the closest driver to the client's source location
                 cursor.execute("""
-                SELECT  driver_id, source <@> location as distance, location
+                SELECT  driver_id, source <@> location as distance, location, shift_id
                 FROM clients_in_area_no_dispatch_ordered, driver_nearby
-                WHERE   client_id = %s AND
+                WHERE   client_id = %s
                 order by distance ASC;
                 """, (client[0],))
-                driver = cursor.fetchone()
+                drivers = cursor.fetchall()
+                # filter out drivers that have already been selected
+                drivers = [d for d in drivers if d[0] not in selected_drivers]
+                driver = drivers[0] if drivers else None
                 if driver is None:
                     break
                 else:
-                    driver = driver[0]
                     # Dispatch the driver to the client
                     cursor.execute("""
                     INSERT INTO Dispatch(request_id, shift_id, car_location, datetime) 
                     VALUES
                     (%s, %s, '(%s, %s)', %s);
-                    """, (client[3], driver[2], driver[1][0], driver[1][1], when))
+                    """, (str(client[3]), str(driver[3]), driver[2].longitude, driver[2].latitude, when))
                     # Remove the driver from the list of available drivers
-                    cursor.execute("""
-                    DELETE FROM driver_nearby
-                    WHERE driver_id = %s;
-                    """, (driver[0],))
+                    selected_drivers.append(driver[0])
+                    # cursor.execute("""
+                    # DELETE FROM driver_nearby
+                    # WHERE driver_id = %s;
+                    # """, (driver[0],))
 
             cursor.close()
-            return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
             self.connection.rollback()
-            raise ex
-            return False
+            # raise ex
 
     # =======================     Helper methods     ======================= #
 
@@ -568,10 +571,25 @@ def sample_test_function() -> None:
         # print(f"[ClockIn] Expected False | Got {clocked_in}.")
 
         # This drive does exist in the db
-        clocked_in = a2.clock_in(
-            22222, datetime.now(), GeoLoc(-79.233, 43.712)
-        )
-        print(f"[ClockIn] Expected True | Got {clocked_in}.")
+        # clocked_in = a2.clock_in(
+        #     22222, datetime.now(), GeoLoc(-79.233, 43.712)
+        # )
+        # print(f"[ClockIn] Expected True | Got {clocked_in}.")
+        #  9          | 9        | (-20.5, 45.0)       |
+        #
+        # Convert 2022-10-31 11:00:00 to a datetime object:
+        dt = datetime.strptime("2022-10-31 11:00:00", "%Y-%m-%d %H:%M:%S")
+
+        # Client Location : (-21.0, 48.0)
+        # Driver Location : (-20.5, 45.0)
+
+        # Bounds for the area around the client's and driver's location:
+        # NW: (-21.5, 48.5) SE: (-20.0, 45.5)  (i.e., a 1.5 x 3.0 degree area)
+        nw = GeoLoc(-21.5, 44.5)  # NW corner of the area
+        se = GeoLoc(-20.0, 48.5)  # SE corner of the area
+
+        dispatch = a2.dispatch(nw, se, dt)
+        print(f"[Dispatch] Expected True | Got {dispatch}.")
 
         # Same driver clocks in again
         # clocked_in = a2.clock_in(
