@@ -484,7 +484,7 @@ class Assignment2:
             # You may find it helpful to uncomment this line while debugging,
             # as it will show you all the details of the error that occurred:
             self.connection.rollback()
-            raise ex
+            # raise ex
 
     # =======================     Helper methods     ======================= #
 
