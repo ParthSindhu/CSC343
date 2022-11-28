@@ -1,6 +1,6 @@
 SET SEARCH_PATH TO ticketchema,
     public;
-DROP TABLE IF EXISTS q1 CASCADE;
+DROP TABLE IF EXISTS q2 CASCADE;
 CREATE TABLE q2(
     owner_name VARCHAR(100),
     venues_owned INTEGER
@@ -8,6 +8,7 @@ CREATE TABLE q2(
 -- Do this for each of the views that define your intermediate steps.
 DROP VIEW IF EXISTS owner_venues CASCADE;
 -- create views
+-- Owners and their owned venues
 CREATE VIEW owner_venues AS
 SELECT owner_id,
     owner_name,

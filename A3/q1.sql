@@ -15,6 +15,7 @@ DROP VIEW IF EXISTS concert_sales CASCADE;
 DROP VIEW IF EXISTS concert_prices CASCADE;
 DROP VIEW IF EXISTS concert_data CASCADE;
 -- Define views for your intermediate steps here:
+-- names and dates of concerts with their instance ids
 CREATE VIEW concert_data AS
 SELECT concert_instance_id,
     concert_id,
@@ -22,6 +23,7 @@ SELECT concert_instance_id,
     concert_name
 FROM concert_dates
     NATURAL JOIN concerts;
+-- prices of concerts with their instance ids
 CREATE VIEW concert_prices AS
 SELECT concert_instance_id,
     concert_name,
@@ -31,6 +33,7 @@ SELECT concert_instance_id,
 FROM seats
     NATURAL JOIN concert_data
     NATURAL JOIN prices;
+-- sales of concerts grouped by concert instance id along with their names and dates
 CREATE VIEW concert_sales AS
 SELECT concert_instance_id,
     concert_name,
@@ -42,12 +45,13 @@ FROM concert_prices
 GROUP BY concert_instance_id,
     concert_name,
     concert_date;
+-- total number of seats in each concert
 CREATE VIEW concert_seats AS
 SELECT concert_instance_id,
     COUNT(seat_id) as seats_available
 FROM concert_prices
 GROUP BY concert_instance_id;
--- Your query that answers the question goes below the "insert into" line:
+-- insert into q1
 INSERT INTO q1
 SELECT concert_name,
     concert_date,
