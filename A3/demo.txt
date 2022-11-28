@@ -1,0 +1,97 @@
+csc343h-sindhupa=> \i runner.txt
+-------------------- Loading schema and data: --------------------
+
+psql:schema.ddl:1: NOTICE:  drop cascades to 16 other objects
+DETAIL:  drop cascades to table owners
+drop cascades to table venues
+drop cascades to table sections
+drop cascades to table seats
+drop cascades to table concerts
+drop cascades to table concert_dates
+drop cascades to table prices
+drop cascades to table users
+drop cascades to table purchases
+drop cascades to table q2
+drop cascades to view owner_venues
+drop cascades to table q3
+drop cascades to view accessible_seats
+drop cascades to view total_seats
+drop cascades to table q4
+drop cascades to view user_tickets
+DROP SCHEMA
+CREATE SCHEMA
+SET
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+SET
+psql:data.sql:10: NOTICE:  truncate cascades to table "concert_dates"
+TRUNCATE TABLE
+INSERT 0 2
+INSERT 0 3
+INSERT 0 6
+INSERT 0 76
+INSERT 0 4
+INSERT 0 7
+INSERT 0 8
+INSERT 0 3
+INSERT 0 7
+
+-------------------- Query 1: -----------------------------------
+
+SET
+psql:q1.sql:3: NOTICE:  table "q1" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:q1.sql:14: NOTICE:  view "concert_sales" does not exist, skipping
+DROP VIEW
+psql:q1.sql:15: NOTICE:  view "concert_prices" does not exist, skipping
+DROP VIEW
+psql:q1.sql:16: NOTICE:  view "concert_data" does not exist, skipping
+DROP VIEW
+CREATE VIEW
+CREATE VIEW
+CREATE VIEW
+CREATE VIEW
+INSERT 0 5
+
+-------------------- Query 2: -----------------------------------
+
+SET
+psql:q2.sql:3: NOTICE:  table "q2" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:q2.sql:9: NOTICE:  view "owner_venues" does not exist, skipping
+DROP VIEW
+CREATE VIEW
+INSERT 0 2
+
+-------------------- Query 3: -----------------------------------
+
+SET
+psql:q3.sql:3: NOTICE:  table "q3" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:q3.sql:10: NOTICE:  view "accessible_seats" does not exist, skipping
+DROP VIEW
+CREATE VIEW
+CREATE VIEW
+INSERT 0 2
+
+-------------------- Query 4: -----------------------------------
+
+SET
+psql:q4.sql:3: NOTICE:  table "q4" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+psql:q4.sql:10: NOTICE:  view "user_tickets" does not exist, skipping
+DROP VIEW
+CREATE VIEW
+INSERT 0 1
+csc343h-sindhupa=> 
