@@ -184,7 +184,7 @@ class Assignment2:
             """)
             shift_id = cursor.fetchone()[0]
             if shift_id is None:
-                shift_id = 0
+                shift_id = 1
             else:
                 shift_id = shift_id + 1
             # check if clocked in
@@ -200,6 +200,7 @@ class Assignment2:
             INSERT INTO Location(shift_id, datetime, location) VALUES
             (%s, %s, '(%s, %s)');
             """, (shift_id, when, geo_loc.longitude, geo_loc.latitude))
+            self.connection.commit()
             cursor.close()
             return True
         except pg.Error as ex:
@@ -297,7 +298,7 @@ class Assignment2:
                     INSERT INTO Pickup(request_id, datetime) VALUES (%s, %s);
                     """, (request_id, when))
             self.connection.commit()
-
+            cursor.close()
             return True
         except pg.Error as ex:
             # You may find it helpful to uncomment this line while debugging,
@@ -474,10 +475,6 @@ class Assignment2:
 
                     # Remove the driver from the list of available drivers
                     selected_drivers.append(driver[0])
-                    # cursor.execute("""
-                    # DELETE FROM driver_nearby
-                    # WHERE driver_id = %s;
-                    # """, (driver[0],))
             self.connection.commit()
             cursor.close()
         except pg.Error as ex:
