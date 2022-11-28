@@ -1,4 +1,4 @@
-SET SEARCH_PATH TO uber,
+SET SEARCH_PATH TO ticketchema,
     public;
 TRUNCATE TABLE venues,
 owners,
@@ -8,8 +8,19 @@ concerts,
 prices,
 users,
 purchases CASCADE;
+INSERT INTO owners(owner_id, owner_name, phone)
+VALUES (
+        1,
+        'Corporation of Massey Hall and Roy Thomson Hall',
+        '4168724255'
+    ),
+    (
+        2,
+        'Maple Leaf Sports and Entertainment',
+        '4168155980'
+    );
 -- 
-INSERT INTO venues(venue_id, name, city, street, owner_id)
+INSERT INTO venues(venue_id, venue_name, city, street, owner_id)
 VALUES (
         1,
         'Massey Hall',
@@ -30,17 +41,6 @@ VALUES (
         'Toronto',
         '40 Bay Street',
         2
-    );
-INSERT INTO owners(owner_id, name, phone)
-VALUES (
-        1,
-        'Corporation of Massey Hall and Roy Thomson Hall',
-        '4168724255'
-    ),
-    (
-        2,
-        'Maple Leaf Sports and Entertainment',
-        '4168155980'
     );
 INSERT INTO sections(section_id, venue_id, section_name)
 VALUES (1, 1, 'floor'),
@@ -137,7 +137,7 @@ VALUES (1, 'A1', 1, true),
     (76, 'row 2 seat 5', 6, false);
 INSERT INTO concerts(concert_id, concert_name)
 VALUES (1, 'Ron Sexsmith'),
-    (2, "Women's Blues Review"),
+    (2, 'Women''s Blues Review'),
     (3, 'Mariah Carey - Merry Christmas to all'),
     (4, 'TSO - Elf in Concert');
 -- Ron Sexsmith is playing Massey Hall on Saturday, December 3rd, at 7:30pm.
@@ -208,7 +208,7 @@ VALUES -- Ron Sexsmith, floor seats at 130$
 -- Allicent hightower, username ahightower
 -- Daemon Targaryen has the username d_targaryen
 -- Criston Cole has the username cristonc
-INSERT INTO users(username, name)
+INSERT INTO users(user_name, name)
 VALUES ('ahightower', 'Allicent Hightower'),
     ('d_targaryen', 'Daemon Targaryen'),
     ('cristonc', 'Criston Cole');
