@@ -35,3 +35,6 @@ SELECT venue_name,
 FROM accessible_seats
     NATURAL JOIN total_seats
     NATURAL JOIN venues;
+-- print q3
+SELECT *
+FROM q3;

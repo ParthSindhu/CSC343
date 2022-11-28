@@ -61,3 +61,6 @@ SELECT concert_name,
     ) as sold_percentage
 FROM concert_sales
     NATURAL JOIN concert_seats;
+-- print q1
+SELECT *
+FROM q1;

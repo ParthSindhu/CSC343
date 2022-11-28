@@ -1,7 +1,7 @@
 csc343h-sindhupa=> \i runner.txt
 -------------------- Loading schema and data: --------------------
 
-psql:schema.ddl:1: NOTICE:  drop cascades to 16 other objects
+psql:schema.ddl:1: NOTICE:  drop cascades to 21 other objects
 DETAIL:  drop cascades to table owners
 drop cascades to table venues
 drop cascades to table sections
@@ -11,6 +11,11 @@ drop cascades to table concert_dates
 drop cascades to table prices
 drop cascades to table users
 drop cascades to table purchases
+drop cascades to table q1
+drop cascades to view concert_data
+drop cascades to view concert_prices
+drop cascades to view concert_sales
+drop cascades to view concert_seats
 drop cascades to table q2
 drop cascades to view owner_venues
 drop cascades to table q3
@@ -60,6 +65,15 @@ CREATE VIEW
 CREATE VIEW
 CREATE VIEW
 INSERT 0 5
+             consert_name              | concert_date | amount_sold | sold_percentage 
+---------------------------------------+--------------+-------------+-----------------
+ Women's Blues Review                  | 2022-11-25   |         275 |               8
+ Mariah Carey - Merry Christmas to all | 2022-12-09   |         986 |               3
+ Mariah Carey - Merry Christmas to all | 2022-12-11   |         488 |               7
+ TSO - Elf in Concert                  | 2022-12-10   |         159 |               5
+ Ron Sexsmith                          | 2022-12-03   |         130 |               4
+(5 rows)
+
 
 -------------------- Query 2: -----------------------------------
 
@@ -71,6 +85,12 @@ psql:q2.sql:9: NOTICE:  view "owner_venues" does not exist, skipping
 DROP VIEW
 CREATE VIEW
 INSERT 0 2
+                   owner_name                    | venues_owned 
+-------------------------------------------------+--------------
+ Corporation of Massey Hall and Roy Thomson Hall |            2
+ Maple Leaf Sports and Entertainment             |            1
+(2 rows)
+
 
 -------------------- Query 3: -----------------------------------
 
@@ -83,6 +103,12 @@ DROP VIEW
 CREATE VIEW
 CREATE VIEW
 INSERT 0 2
+    venue_name    | accessible_percentage 
+------------------+-----------------------
+ Massey Hall      |                    24
+ Scotiabank Arena |                    33
+(2 rows)
+
 
 -------------------- Query 4: -----------------------------------
 
@@ -94,4 +120,9 @@ psql:q4.sql:10: NOTICE:  view "user_tickets" does not exist, skipping
 DROP VIEW
 CREATE VIEW
 INSERT 0 1
+ user_name | tickets_purchased 
+-----------+-------------------
+ cristonc  |                 3
+(1 row)
+
 csc343h-sindhupa=> 

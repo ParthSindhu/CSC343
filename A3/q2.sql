@@ -21,3 +21,6 @@ SELECT owner_name,
     COUNT(venue_id)
 FROM owner_venues
 GROUP BY owner_name;
+-- print q2
+SELECT *
+FROM q2;

@@ -25,3 +25,6 @@ WHERE tickets_purchased = (
         SELECT MAX(tickets_purchased)
         FROM user_tickets
     );
+-- print q4
+SELECT *
+FROM q4;
