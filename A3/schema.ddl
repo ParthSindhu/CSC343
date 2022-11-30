@@ -3,15 +3,16 @@ create schema ticketchema;
 set search_path to ticketchema;
 
 -- Could not:
--- 1 ) Was unable to to add a constraint to enforce atleast 10 seats available per venue
+-- 1) Was unable to to add a constraint to enforce atleast 10 seats available per venue
+-- 2) Similarly, Venue capacity must be greater than 0. ie, a venue must have atleast 1 section. with atleast one seat. It was not mentioned and would have required a trigger or assertion to enforce
+-- 3) Could not enforce same concert happens at the same venue every time, as it would require a trigger or assertion to enforce
 -- Did not:
--- 1 ) purchase time of a seat must be before the show time of the concert
--- 2 ) Venue names must be unique. This could be enforced but was not mentioned in the requirements. And it could be possible to have same names in different cities
--- 3 ) Venue capacity must be greater than 0. ie, a venue must have atleast 1 section. with atleast one seat. It was not mentioned and would have required a trigger or assertion to enforce
+-- 1 ) Venue names must be unique. This could be enforced but was not mentioned in the requirements. And it could be possible to have same names in different cities
 -- Assumptions:
--- The price per ticket of a concert doest change between different timings of the same concert
--- Exrtra:
--- price of a ticket is below 10000$ (4 digits). Since numeric(6,2) was used as the datatype.
+-- 1) The price per ticket of a concert doest change between different timings of the same concert
+-- 2) purchase time of a seat must be before the show time of the concert
+-- Extra:
+-- 1) price of a ticket is below 10000$ (4 digits). Since numeric(6,2) was used as the datatype.
 
 
 -- create a table for owners of Venues

@@ -1,6 +1,7 @@
 SET SEARCH_PATH TO ticketchema,
     public;
 DROP TABLE IF EXISTS q1 CASCADE;
+-- Percentage of seats sold for concert , each date is treated as separate concert
 CREATE TABLE q1(
     consert_name VARCHAR(100),
     concert_date DATE,
