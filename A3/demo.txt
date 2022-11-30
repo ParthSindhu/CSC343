@@ -1,7 +1,7 @@
 csc343h-sindhupa=> \i runner.txt
 -------------------- Loading schema and data: --------------------
 
-psql:schema.ddl:1: NOTICE:  drop cascades to 21 other objects
+psql:schema.ddl:1: NOTICE:  drop cascades to 16 other objects
 DETAIL:  drop cascades to table owners
 drop cascades to table venues
 drop cascades to table sections
@@ -11,16 +11,11 @@ drop cascades to table concert_dates
 drop cascades to table prices
 drop cascades to table users
 drop cascades to table purchases
+drop cascades to view total_seats
 drop cascades to table q1
-drop cascades to view concert_data
-drop cascades to view concert_prices
-drop cascades to view concert_sales
-drop cascades to view concert_seats
 drop cascades to table q2
-drop cascades to view owner_venues
 drop cascades to table q3
 drop cascades to view accessible_seats
-drop cascades to view total_seats
 drop cascades to table q4
 drop cascades to view user_tickets
 DROP SCHEMA
@@ -36,7 +31,7 @@ CREATE TABLE
 CREATE TABLE
 CREATE TABLE
 SET
-psql:data.sql:10: NOTICE:  truncate cascades to table "concert_dates"
+psql:data.sql:10: NOTICE:  truncate cascades to table "concertdates"
 TRUNCATE TABLE
 INSERT 0 2
 INSERT 0 3
@@ -54,11 +49,11 @@ SET
 psql:q1.sql:3: NOTICE:  table "q1" does not exist, skipping
 DROP TABLE
 CREATE TABLE
-psql:q1.sql:14: NOTICE:  view "concert_sales" does not exist, skipping
+psql:q1.sql:13: NOTICE:  view "concert_sales" does not exist, skipping
 DROP VIEW
-psql:q1.sql:15: NOTICE:  view "concert_prices" does not exist, skipping
+psql:q1.sql:14: NOTICE:  view "concert_prices" does not exist, skipping
 DROP VIEW
-psql:q1.sql:16: NOTICE:  view "concert_data" does not exist, skipping
+psql:q1.sql:15: NOTICE:  view "concert_data" does not exist, skipping
 DROP VIEW
 CREATE VIEW
 CREATE VIEW
@@ -116,7 +111,7 @@ SET
 psql:q4.sql:3: NOTICE:  table "q4" does not exist, skipping
 DROP TABLE
 CREATE TABLE
-psql:q4.sql:10: NOTICE:  view "user_tickets" does not exist, skipping
+psql:q4.sql:11: NOTICE:  view "user_tickets" does not exist, skipping
 DROP VIEW
 CREATE VIEW
 INSERT 0 1
@@ -124,5 +119,3 @@ INSERT 0 1
 -----------+-------------------
  cristonc  |                 3
 (1 row)
-
-csc343h-sindhupa=> 

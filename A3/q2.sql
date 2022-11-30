@@ -3,23 +3,23 @@ SET SEARCH_PATH TO ticketchema,
 DROP TABLE IF EXISTS q2 CASCADE;
 CREATE TABLE q2(
     owner_name VARCHAR(100),
-    venues_owned INTEGER
+    Venues_owned INTEGER
 );
 -- Do this for each of the views that define your intermediate steps.
-DROP VIEW IF EXISTS owner_venues CASCADE;
+DROP VIEW IF EXISTS owner_Venues CASCADE;
 -- create views
--- Owners and their owned venues
-CREATE VIEW owner_venues AS
+-- Owner and their owned venues
+CREATE VIEW owner_Venues AS
 SELECT owner_id,
     owner_name,
     venue_id
-FROM owners
-    NATURAL JOIN venues;
+FROM Owner
+    NATURAL JOIN Venues;
 -- insert into q2
 INSERT INTO q2
 SELECT owner_name,
     COUNT(venue_id)
-FROM owner_venues
+FROM owner_Venues
 GROUP BY owner_name;
 -- print q2
 SELECT *

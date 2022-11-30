@@ -1,7 +1,8 @@
 SET SEARCH_PATH TO ticketchema,
     public;
 DROP TABLE IF EXISTS q4 CASCADE;
--- Report the username of the person who has purchased the most tickets. If there is a tie, report them all.
+-- Report the username of the person who has purchased the most tickets. If
+-- there is a tie, report them all.
 CREATE TABLE q4(
     user_name VARCHAR(100),
     tickets_purchased INTEGER
@@ -13,8 +14,8 @@ DROP VIEW IF EXISTS user_tickets CASCADE;
 CREATE VIEW user_tickets AS
 SELECT user_name,
     COUNT(purchase_id) as tickets_purchased
-FROM users
-    NATURAL JOIN purchases
+FROM Users
+    NATURAL JOIN Purchases
 GROUP BY user_name;
 -- insert into q4
 INSERT INTO q4

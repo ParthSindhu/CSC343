@@ -10,8 +10,6 @@ CREATE TABLE q1(
     sold_percentage INTEGER
 );
 -- Do this for each of the views that define your intermediate steps.  
--- (But give them better names!) The IF EXISTS avoids generating an error 
--- the first time this file is imported.
 DROP VIEW IF EXISTS concert_sales CASCADE;
 DROP VIEW IF EXISTS concert_prices CASCADE;
 DROP VIEW IF EXISTS concert_data CASCADE;
@@ -22,8 +20,8 @@ SELECT concert_instance_id,
     concert_id,
     concert_date,
     concert_name
-FROM concert_dates
-    NATURAL JOIN concerts;
+FROM ConcertDates
+    NATURAL JOIN Concerts;
 -- prices of concerts with their instance ids
 CREATE VIEW concert_prices AS
 SELECT concert_instance_id,
@@ -31,9 +29,9 @@ SELECT concert_instance_id,
     concert_date,
     price,
     seat_id
-FROM seats
+FROM Seats
     NATURAL JOIN concert_data
-    NATURAL JOIN prices;
+    NATURAL JOIN Prices;
 -- sales of concerts grouped by concert instance id along with their names and dates
 CREATE VIEW concert_sales AS
 SELECT concert_instance_id,
@@ -42,7 +40,7 @@ SELECT concert_instance_id,
     SUM(price) as amount_sold,
     COUNT(seat_id) as seats_sold
 FROM concert_prices
-    NATURAL JOIN purchases
+    NATURAL JOIN Purchases
 GROUP BY concert_instance_id,
     concert_name,
     concert_date;

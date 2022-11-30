@@ -1,14 +1,14 @@
 SET SEARCH_PATH TO ticketchema,
     public;
-TRUNCATE TABLE venues,
-owners,
-seats,
-sections,
-concerts,
-prices,
-users,
-purchases CASCADE;
-INSERT INTO owners(owner_id, owner_name, phone)
+TRUNCATE TABLE Venues,
+Owner,
+Seats,
+Sections,
+Concerts,
+Prices,
+Users,
+Purchases CASCADE;
+INSERT INTO Owner(owner_id, owner_name, phone)
 VALUES (
         1,
         'Corporation of Massey Hall and Roy Thomson Hall',
@@ -20,7 +20,7 @@ VALUES (
         '4168155980'
     );
 -- 
-INSERT INTO venues(venue_id, venue_name, city, street, owner_id)
+INSERT INTO Venues(venue_id, venue_name, city, street, owner_id)
 VALUES (
         1,
         'Massey Hall',
@@ -42,14 +42,14 @@ VALUES (
         '40 Bay Street',
         2
     );
-INSERT INTO sections(section_id, venue_id, section_name)
+INSERT INTO Sections(section_id, venue_id, section_name)
 VALUES (1, 1, 'floor'),
     (2, 1, 'balocny'),
     (3, 2, 'main hall'),
     (4, 3, '100'),
     (5, 3, '200'),
     (6, 3, '300');
-INSERT INTO seats(seat_id, seat, section_id, is_accessible)
+INSERT INTO Seats(seat_id, seat, section_id, is_accessible)
 VALUES (1, 'A1', 1, true),
     (2, 'A2', 1, true),
     (3, 'A3', 1, true),
@@ -70,17 +70,17 @@ VALUES (1, 'A1', 1, true),
     (18, 'B8', 1, false),
     (19, 'B9', 1, false),
     (20, 'B10', 1, false),
-    -- balcony has seats C1 to C5, not accessible
+    -- balcony has Seats C1 to C5, not accessible
     (21, 'C1', 2, false),
     (22, 'C2', 2, false),
     (23, 'C3', 2, false),
     (24, 'C4', 2, false),
     (25, 'C5', 2, false),
-    -- main hall has seats AA1 to AA3, not accessible
+    -- main hall has Seats AA1 to AA3, not accessible
     (26, 'Aa1', 3, false),
     (27, 'AA2', 3, false),
     (28, 'AA3', 3, false),
-    -- main hall has seats BB1 to BB8, not accessible
+    -- main hall has Seats BB1 to BB8, not accessible
     (29, 'BB1', 3, false),
     (30, 'BB2', 3, false),
     (31, 'BB3', 3, false),
@@ -89,7 +89,7 @@ VALUES (1, 'A1', 1, true),
     (34, 'BB6', 3, false),
     (35, 'BB7', 3, false),
     (36, 'BB8', 3, false),
-    -- main hall has seats CC1 to CC10, not accessible
+    -- main hall has Seats CC1 to CC10, not accessible
     (37, 'CC1', 3, false),
     (38, 'CC2', 3, false),
     (39, 'CC3', 3, false),
@@ -100,8 +100,8 @@ VALUES (1, 'A1', 1, true),
     (44, 'CC8', 3, false),
     (45, 'CC9', 3, false),
     (46, 'CC10', 3, false),
-    -- sections "100", "200", and "300"
-    -- each section has seats "row 1, seat 1" through "row 1, seat 5" and "row 2, seat 1" through "row 2, seat 5"
+    -- Sections "100", "200", and "300"
+    -- each section has Seats "row 1, seat 1" through "row 1, seat 5" and "row 2, seat 1" through "row 2, seat 5"
     -- all of section "100" is accessible.
     (47, 'row 1 seat 1', 4, true),
     (48, 'row 1 seat 2', 4, true),
@@ -135,14 +135,14 @@ VALUES (1, 'A1', 1, true),
     (74, 'row 2 seat 3', 6, false),
     (75, 'row 2 seat 4', 6, false),
     (76, 'row 2 seat 5', 6, false);
-INSERT INTO concerts(concert_id, concert_name)
+INSERT INTO Concerts(concert_id, concert_name)
 VALUES (1, 'Ron Sexsmith'),
     (2, 'Women''s Blues Review'),
     (3, 'Mariah Carey - Merry Christmas to all'),
     (4, 'TSO - Elf in Concert');
 -- Ron Sexsmith is playing Massey Hall on Saturday, December 3rd, at 7:30pm.
 -- Women's Blues Review is at Massey on Friday, November 25th, at 8:00pm.
-INSERT INTO concert_dates(
+INSERT INTO ConcertDates(
         concert_instance_id,
         concert_id,
         venue_id,
@@ -188,18 +188,18 @@ VALUES (1, 1, 1, '2022-12-03 19:30:00'),
         '2022-12-10 19:30:00'
     );
 -- prices
-INSERT INTO prices(price_id, concert_id, section_id, price)
-VALUES -- Ron Sexsmith, floor seats at 130$
+INSERT INTO Prices(price_id, concert_id, section_id, price)
+VALUES -- Ron Sexsmith, floor Seats at 130$
     (1, 1, 1, 130),
-    -- Ron Sexsmith, balcony seats at 99$
+    -- Ron Sexsmith, balcony Seats at 99$
     (2, 1, 2, 99),
-    -- Womens Blues Review, floor seats at 150$
+    -- Womens Blues Review, floor Seats at 150$
     (3, 2, 1, 150),
-    -- Womens Blues Review, balcony seats at 125$
+    -- Womens Blues Review, balcony Seats at 125$
     (4, 2, 2, 125),
-    -- Mariah Carey - Merry Christmas to all, 100 seats at 986$
+    -- Mariah Carey - Merry Christmas to all, 100 Seats at 986$
     (5, 3, 4, 986),
-    -- Mariah Carey - Merry Christmas to all, 200 seats at 244$, 300 at 176$
+    -- Mariah Carey - Merry Christmas to all, 200 Seats at 244$, 300 at 176$
     (6, 3, 5, 244),
     (7, 3, 6, 176),
     -- TSO - Elf in Concert, main hall - 159$
@@ -208,12 +208,12 @@ VALUES -- Ron Sexsmith, floor seats at 130$
 -- Allicent hightower, username ahightower
 -- Daemon Targaryen has the username d_targaryen
 -- Criston Cole has the username cristonc
-INSERT INTO users(user_name, name)
+INSERT INTO Users(user_name, name)
 VALUES ('ahightower', 'Allicent Hightower'),
     ('d_targaryen', 'Daemon Targaryen'),
     ('cristonc', 'Criston Cole');
 -- purchases
-INSERT INTO purchases(
+INSERT INTO Purchases(
         purchase_id,
         concert_instance_id,
         user_name,
